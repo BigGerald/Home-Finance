@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: HomeFinance
+  datasource:
+    url: ${POSTGRES_HOST:jdbc:postgresql://dpg-d6u8dfia214c73d0aoeg-a.oregon-postgres.render.com/dbhomefinance}
+    username: ${POSTGRES_USER:homefinance}
+    password: ${POSTGRES_PASS:4uZfanZTqJ9ZBiegFjBjJaxY2kakHJFG}
+    driver-class-name: org.postgresql.Driver
+  flyway:
+    locations: db.migration
+    url: ${POSTGRES_HOST:jdbc:postgresql://dpg-d6u8dfia214c73d0aoeg-a.oregon-postgres.render.com/dbhomefinance}
+    user: ${POSTGRES_USER:homefinance}
+    password: ${POSTGRES_PASS:4uZfanZTqJ9ZBiegFjBjJaxY2kakHJFG}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    #    show-sql: true
+  web:
+    resources:
+      add-mappings: false
+logging:
+  level:
+    com.example.demo: "INFO"
+    org.springframework: "INFO"
+    org.springframework.cache: "DEBUG"
+
+server:
+  port: ${SERVER_PORT:80}

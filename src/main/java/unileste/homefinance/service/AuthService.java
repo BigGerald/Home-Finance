@@ -22,14 +22,14 @@ public class AuthService {
 
     public SupabaseUser adminSignUp(RegisterUserDTO registerUserDTO) {
         log.info("adminSignUp() - Received admin sign-up request for email: {}", registerUserDTO.getEmail());
-        SupabaseUser newUSer = supabaseAuthClient.signUp( new SupabaseRegisterUserDTO(registerUserDTO, UserTypes.ADMIN) ).getBody();
+        SupabaseUser newUSer = supabaseAuthClient.signUp( new SupabaseRegisterUserDTO(registerUserDTO, UserTypes.ADMIN, false) ).getBody();
         log.info("adminSignUp() - User created with ID: {}", newUSer.getId());
         return newUSer;
     }
 
     public SupabaseUser commonUserSignUp(RegisterUserDTO registerUserDTO) {
         log.info("commonUserSignUp() - Received user sign-up request for email: {}", registerUserDTO.getEmail());
-        SupabaseUser newUser = supabaseAuthClient.signUp( new SupabaseRegisterUserDTO( registerUserDTO, UserTypes.USER)).getBody();
+        SupabaseUser newUser = supabaseAuthClient.signUp( new SupabaseRegisterUserDTO( registerUserDTO, UserTypes.USER, false)).getBody();
         log.info("commonUserSignUp() - User created with ID: {}", newUser.getId());
         return newUser;
     }

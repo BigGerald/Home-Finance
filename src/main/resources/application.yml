@@ -5,9 +5,9 @@ spring:
     url: ${POSTGRES_HOST:jdbc:postgresql://dpg-d6u8dfia214c73d0aoeg-a.oregon-postgres.render.com/dbhomefinance}
     username: ${POSTGRES_USER:homefinance}
     password: ${POSTGRES_PASS:4uZfanZTqJ9ZBiegFjBjJaxY2kakHJFG}
-#    driver-class-name: org.postgresql.Driver
+    driver-class-name: org.postgresql.Driver
   flyway:
-    locations: db.migration
+    locations: classpath:db/migration
     url: ${POSTGRES_HOST:jdbc:postgresql://dpg-d6u8dfia214c73d0aoeg-a.oregon-postgres.render.com/dbhomefinance}
     user: ${POSTGRES_USER:homefinance}
     password: ${POSTGRES_PASS:4uZfanZTqJ9ZBiegFjBjJaxY2kakHJFG}

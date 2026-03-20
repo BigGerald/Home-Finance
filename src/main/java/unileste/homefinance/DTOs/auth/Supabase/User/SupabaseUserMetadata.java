@@ -24,4 +24,6 @@ public class SupabaseUserMetadata {
     private boolean phoneVerified;
     private String sub;
     private String role;
+    @JsonProperty("biometric_enabled")
+    boolean biometricEnabled;
 }

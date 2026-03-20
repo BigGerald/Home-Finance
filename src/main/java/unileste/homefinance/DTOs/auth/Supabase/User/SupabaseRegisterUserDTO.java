@@ -17,7 +17,7 @@ public class SupabaseRegisterUserDTO {
     private String password;
     private SupabaseRegisterUserData data;
 
-    public SupabaseRegisterUserDTO(RegisterUserDTO register, UserTypes type) {
+    public SupabaseRegisterUserDTO(RegisterUserDTO register, UserTypes type, boolean isBiometricEnabled) {
         this.email = register.getEmail();
         this.password = register.getPassword();
         this.data = SupabaseRegisterUserData.builder()
@@ -25,6 +25,7 @@ public class SupabaseRegisterUserDTO {
                 .firstName(register.getFirstName())
                 .lastName(register.getLastName())
                 .role(type.getValue())
+                .biometricEnabled(isBiometricEnabled)
                 .build();
     }
 }

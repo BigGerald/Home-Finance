@@ -18,4 +18,6 @@ public class SupabaseRegisterUserData {
     @JsonProperty("display_name")
     private String displayName;
     private String role;
+    @JsonProperty("biometric_enabled")
+    boolean biometricEnabled;
 }

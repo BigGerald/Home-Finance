@@ -4,8 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import proj.integr.construcaocivil.DTOs.auth.Login.RegisterUserDTO;
-import proj.integr.construcaocivil.constants.UserTypes;
+import unileste.homefinance.DTOs.auth.Login.RegisterUserDTO;
+import unileste.homefinance.constants.UserTypes;
+
 
 @Data
 @NoArgsConstructor

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import proj.integr.construcaocivil.DTOs.user.UpdateUserDataRequest;
+import unileste.homefinance.DTOs.user.UpdateUserDataRequest;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @NoArgsConstructor

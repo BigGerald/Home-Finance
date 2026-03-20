@@ -23,7 +23,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: https://acncrrpfandiezenajnl.supabase.co/auth/v1/.well-known/jwks.json
+          issuer-uri: https://acncrrpfandiezenajnl.supabase.co/auth/v1
 
 supabase:
   url: https://acncrrpfandiezenajnl.supabase.co
@@ -33,7 +33,11 @@ logging:
   level:
     com.example.demo: "INFO"
     org.springframework: "INFO"
-    org.springframework.cache: "DEBUG"
+    org.springframework.cache: "INFO"
+    org.springframework.security: "INFO"
+    org.springframework.security.oauth2: "INFO"
+    org.springframework.web: "INFO"
+
 
 server:
   port: ${SERVER_PORT:80}

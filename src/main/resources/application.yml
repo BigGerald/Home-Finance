@@ -5,7 +5,7 @@ spring:
     url: ${POSTGRES_HOST:jdbc:postgresql://dpg-d6u8dfia214c73d0aoeg-a.oregon-postgres.render.com/dbhomefinance}
     username: ${POSTGRES_USER:homefinance}
     password: ${POSTGRES_PASS:4uZfanZTqJ9ZBiegFjBjJaxY2kakHJFG}
-    driver-class-name: org.postgresql.Driver
+#    driver-class-name: org.postgresql.Driver
   flyway:
     locations: db.migration
     url: ${POSTGRES_HOST:jdbc:postgresql://dpg-d6u8dfia214c73d0aoeg-a.oregon-postgres.render.com/dbhomefinance}
@@ -19,6 +19,16 @@ spring:
   web:
     resources:
       add-mappings: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: https://acncrrpfandiezenajnl.supabase.co/auth/v1/.well-known/jwks.json
+
+supabase:
+  url: https://acncrrpfandiezenajnl.supabase.co
+  api:
+    key: sb_publishable_3RbqTIr3CBsVgegQnURHOg_b-V3eIyL
 logging:
   level:
     com.example.demo: "INFO"

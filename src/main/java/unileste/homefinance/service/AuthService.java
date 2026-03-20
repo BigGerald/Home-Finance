@@ -8,13 +8,17 @@ import unileste.homefinance.DTOs.auth.Login.RegisterUserDTO;
 import unileste.homefinance.DTOs.auth.Supabase.User.SupabaseAuthResponse;
 import unileste.homefinance.DTOs.auth.Supabase.User.SupabaseRegisterUserDTO;
 import unileste.homefinance.DTOs.auth.Supabase.User.SupabaseUser;
+import unileste.homefinance.DTOs.user.EssentialUserDTO;
 import unileste.homefinance.client.SupabaseAuthClient;
 import unileste.homefinance.constants.UserTypes;
+import unileste.homefinance.utils.JwtUtils;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AuthService {
+    private final SupabaseAuthClient  supabaseAuthClient;
+    private final JwtUtils jwtUtils;
 
     public SupabaseUser adminSignUp(RegisterUserDTO registerUserDTO) {
         log.info("adminSignUp() - Received admin sign-up request for email: {}", registerUserDTO.getEmail());
@@ -23,7 +27,6 @@ public class AuthService {
         return newUSer;
     }
 
-    private final SupabaseAuthClient  supabaseAuthClient;
     public SupabaseUser commonUserSignUp(RegisterUserDTO registerUserDTO) {
         log.info("commonUserSignUp() - Received user sign-up request for email: {}", registerUserDTO.getEmail());
         SupabaseUser newUser = supabaseAuthClient.signUp( new SupabaseRegisterUserDTO( registerUserDTO, UserTypes.USER)).getBody();
@@ -36,5 +39,13 @@ public class AuthService {
         SupabaseAuthResponse response =  supabaseAuthClient.signIn(new LoginDTO(email, password)).getBody();
         log.info("signIn() - User signed in successfully, received access token");
         return response;
+    }
+
+    public EssentialUserDTO getUserData(){
+        log.info("getUserData() - [START] - userId: {}", jwtUtils.getUserId());
+        SupabaseUser supabaseUser = supabaseAuthClient.getUser().getBody();
+        EssentialUserDTO essentialUserDTO = new EssentialUserDTO(supabaseUser);
+        log.info("getUserData() - [END]");
+        return essentialUserDTO;
     }
 }

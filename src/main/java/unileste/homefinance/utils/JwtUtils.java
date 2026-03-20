@@ -10,7 +10,7 @@ import unileste.homefinance.exceptions.AuthException;
 import java.util.Map;
 
 @Component
-public class AuthenticatedUserService {
+public class JwtUtils {
 
     public Jwt getJwt() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

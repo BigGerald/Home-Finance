@@ -7,14 +7,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import unileste.homefinance.DTOs.deafult.DefaultErrorResponse;
 import unileste.homefinance.DTOs.house.CreateHouseRequestBody;
 import unileste.homefinance.DTOs.house.HouseDTO;
@@ -82,5 +80,37 @@ public class HouseController {
         HouseDTO houseData = houseService.getActiveHouseOfUser();
         log.info("getActiveHouse() - [END]");
         return ResponseEntity.status(HttpStatus.OK).body(houseData);
+    }
+
+    @Operation(summary = "Entrar em uma residência usando código de convite", description = "Endpoint para o usuário entrar em uma residência existente usando um código de convite válido. O usuário se tornará um membro ativo da residência associada ao código de convite fornecido.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuário entrou na residência com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Requisição inválida, por exemplo, código de convite ausente ou vazio",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DefaultErrorResponse.class)
+                    )),
+            @ApiResponse(responseCode = "401", description = "Não autorizado, token de autenticação ausente ou inválido",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DefaultErrorResponse.class)
+                    )),
+            @ApiResponse(responseCode = "404", description = "Nenhuma residência encontrada para o código de convite fornecido",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DefaultErrorResponse.class)
+                    )),
+            @ApiResponse(responseCode = "500", description = "Erro interno do servidor",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DefaultErrorResponse.class)
+                    ))
+    })
+    @PostMapping("/house/join")
+    public ResponseEntity<HouseDTO> joinHouse(@PathParam("inviteCode") String inviteCode) {
+        log.info("joinHouse() - [START]");
+        HouseDTO houseData = houseService.joinHouseWithInviteCode(inviteCode);
+        log.info("joinHouse() - [END]");
+        return ResponseEntity.ok(houseData);
     }
 }

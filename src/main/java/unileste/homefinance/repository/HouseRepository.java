@@ -13,4 +13,5 @@ import java.util.UUID;
 public interface HouseRepository extends JpaRepository<House, UUID> {
     public boolean existsByInviteCode(String inviteCode);
     public Optional<House> findById(UUID id);
+    public Optional<House> findByInviteCode(String inviteCode);
 }

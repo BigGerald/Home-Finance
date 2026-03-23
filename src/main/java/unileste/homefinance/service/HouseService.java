@@ -60,6 +60,32 @@ public class HouseService {
         return buildHouseResponse(houseEntityData);
     }
 
+    @Transactional
+    public HouseDTO joinHouseWithInviteCode(String inviteCode) {
+        log.info("joinHouseWithInviteCode() - [START] - userId: {} - inviteCode: {}", jwtUtils.getUserId(), inviteCode);
+        log.info("joinHouseWithInviteCode() - validating if user is active in other house");
+        if (houseMemberRepository.existsByUserIdAndStatus(UUID.fromString(jwtUtils.getUserId()), MemberStatus.ACTIVE)) {
+            log.error("joinHouseWithInviteCode() - user is already active in another house");
+            throw new HouseException("User is already active in another house. Please leave the current house before joining a new one.");
+        }
+        log.info("joinHouseWithInviteCode() - user is not active in another house");
+        log.info("joinHouseWithInviteCode() - searching house by the invite code");
+        House houseEntityData = houseRepository.findByInviteCode(inviteCode).orElseThrow(() -> {
+            log.error("joinHouseWithInviteCode() - no house found with the provided invite code: {}", inviteCode);
+            return new HouseNotFoundException("No house found with the provided invite code");
+        });
+        log.info("joinHouseWithInviteCode() - house found for the invite code - houseId: {}", houseEntityData.getId());
+        houseEntityData.addMember(HouseMember.builder()
+                .userId(UUID.fromString(jwtUtils.getUserId()))
+                .role(MemberRole.MEMBER)
+                .status(MemberStatus.ACTIVE)
+                .joinedAt(java.time.LocalDateTime.now())
+                .build());
+        houseRepository.save(houseEntityData);
+        log.info("joinHouseWithInviteCode() - [END] - user successfully joined the house");
+        return buildHouseResponse(houseEntityData);
+    }
+
     private HouseDTO buildHouseResponse(House house) {
         HouseDTO houseDTO = new HouseDTO();
         houseDTO.setId(house.getId().toString());

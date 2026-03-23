@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import unileste.homefinance.DTOs.deafult.DefaultErrorResponse;
 import unileste.homefinance.DTOs.house.CreateHouseRequestBody;
 import unileste.homefinance.DTOs.house.HouseDTO;
+import unileste.homefinance.DTOs.house.LeaveHouseResponse;
 import unileste.homefinance.service.HouseService;
 
 @RestController
@@ -112,5 +113,13 @@ public class HouseController {
         HouseDTO houseData = houseService.joinHouseWithInviteCode(inviteCode);
         log.info("joinHouse() - [END]");
         return ResponseEntity.ok(houseData);
+    }
+
+    @DeleteMapping("/house/leave")
+    public ResponseEntity<LeaveHouseResponse> leaveHouse() {
+        log.info("leaveHouse() - [START]");
+        LeaveHouseResponse response = houseService.leaveActualHouse();
+        log.info("leaveHouse() - [END]");
+        return ResponseEntity.ok(response);
     }
 }

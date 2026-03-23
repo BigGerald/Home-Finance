@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import unileste.homefinance.DTOs.auth.Login.RegisterUserDTO;
-import unileste.homefinance.constants.UserTypes;
+import unileste.homefinance.domain.constants.UserTypes;
 
 
 @Data

@@ -8,9 +8,8 @@ import unileste.homefinance.DTOs.auth.Login.RegisterUserDTO;
 import unileste.homefinance.DTOs.auth.Supabase.User.SupabaseAuthResponse;
 import unileste.homefinance.DTOs.auth.Supabase.User.SupabaseRegisterUserDTO;
 import unileste.homefinance.DTOs.auth.Supabase.User.SupabaseUser;
-import unileste.homefinance.DTOs.user.EssentialUserDTO;
 import unileste.homefinance.client.SupabaseAuthClient;
-import unileste.homefinance.constants.UserTypes;
+import unileste.homefinance.domain.constants.UserTypes;
 import unileste.homefinance.utils.JwtUtils;
 
 @Service
@@ -22,6 +21,9 @@ public class AuthService {
 
     public SupabaseUser adminSignUp(RegisterUserDTO registerUserDTO) {
         log.info("adminSignUp() - Received admin sign-up request for email: {}", registerUserDTO.getEmail());
+        log.info("adminSignup() - validating request");
+        registerUserDTO.validateRegisterUserRequest();
+        log.info("adminSignup() - valid request");
         SupabaseUser newUSer = supabaseAuthClient.signUp( new SupabaseRegisterUserDTO(registerUserDTO, UserTypes.ADMIN, false) ).getBody();
         log.info("adminSignUp() - User created with ID: {}", newUSer.getId());
         return newUSer;
@@ -29,6 +31,9 @@ public class AuthService {
 
     public SupabaseUser commonUserSignUp(RegisterUserDTO registerUserDTO) {
         log.info("commonUserSignUp() - Received user sign-up request for email: {}", registerUserDTO.getEmail());
+        log.info("commonUserSignUp() - validating request");
+        registerUserDTO.validateRegisterUserRequest();
+        log.info("commonUserSignUp() - valid request");
         SupabaseUser newUser = supabaseAuthClient.signUp( new SupabaseRegisterUserDTO( registerUserDTO, UserTypes.USER, false)).getBody();
         log.info("commonUserSignUp() - User created with ID: {}", newUser.getId());
         return newUser;
@@ -39,13 +44,5 @@ public class AuthService {
         SupabaseAuthResponse response =  supabaseAuthClient.signIn(new LoginDTO(email, password)).getBody();
         log.info("signIn() - User signed in successfully, received access token");
         return response;
-    }
-
-    public EssentialUserDTO getUserData(){
-        log.info("getUserData() - [START] - userId: {}", jwtUtils.getUserId());
-        SupabaseUser supabaseUser = supabaseAuthClient.getUser().getBody();
-        EssentialUserDTO essentialUserDTO = new EssentialUserDTO(supabaseUser);
-        log.info("getUserData() - [END]");
-        return essentialUserDTO;
     }
 }

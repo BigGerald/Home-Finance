@@ -1,4 +1,4 @@
-package unileste.homefinance.constants;
+package unileste.homefinance.domain.constants;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

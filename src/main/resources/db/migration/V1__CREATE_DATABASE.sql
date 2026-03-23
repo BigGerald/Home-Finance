@@ -28,8 +28,8 @@ CREATE TABLE houses
     invite_code VARCHAR(50) UNIQUE NOT NULL,
     balance     DECIMAL(12, 2)   DEFAULT 0.00,
     admin_id    UUID               NOT NULL,
-    created_at  TIMESTAMPTZ      DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMPTZ      DEFAULT CURRENT_TIMESTAMP
+    created_at  TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP      DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_houses_admin_id ON houses (admin_id);
@@ -50,8 +50,8 @@ CREATE TABLE house_members
     user_id   UUID        NOT NULL,
     role      VARCHAR(50) NOT NULL CHECK (role IN ('ADMIN', 'MEMBER')),
     status    VARCHAR(50) NOT NULL CHECK (status IN ('ACTIVE', 'LEFT', 'REMOVED')),
-    joined_at TIMESTAMPTZ      DEFAULT CURRENT_TIMESTAMP,
-    left_at   TIMESTAMPTZ
+    joined_at TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+    left_at   TIMESTAMP
 );
 
 -- 1 casa ativa por usuário
@@ -84,8 +84,8 @@ CREATE TABLE expenses
     category_id    UUID REFERENCES categories (id),
     due_date       DATE           NOT NULL,
     status         VARCHAR(50)    NOT NULL CHECK (status IN ('PENDING', 'PAID')),
-    created_at     TIMESTAMPTZ      DEFAULT CURRENT_TIMESTAMP,
-    updated_at     TIMESTAMPTZ      DEFAULT CURRENT_TIMESTAMP
+    created_at     TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+    updated_at     TIMESTAMP      DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_expenses_creator_id ON expenses (creator_id);
@@ -108,8 +108,8 @@ CREATE TABLE expense_splits
     user_id    UUID           NOT NULL,
     amount     DECIMAL(12, 2) NOT NULL CHECK (amount > 0),
     status     VARCHAR(50)    NOT NULL CHECK (status IN ('PENDING', 'PAID')),
-    created_at TIMESTAMPTZ      DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ      DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP      DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_expense_splits_user_id ON expense_splits (user_id);
@@ -134,7 +134,7 @@ CREATE TABLE house_balance_transactions
         type IN ('MANUAL_ADD', 'MANUAL_REMOVE', 'EXPENSE_PAYMENT')
         ),
     description VARCHAR(255),
-    created_at  TIMESTAMPTZ      DEFAULT CURRENT_TIMESTAMP
+    created_at  TIMESTAMP      DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_house_balance_transactions_user_id

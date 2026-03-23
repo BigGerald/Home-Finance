@@ -2,15 +2,15 @@ spring:
   application:
     name: HomeFinance
   datasource:
-    url: ${POSTGRES_HOST:jdbc:postgresql://dpg-d6u8dfia214c73d0aoeg-a.oregon-postgres.render.com/dbhomefinance}
-    username: ${POSTGRES_USER:homefinance}
-    password: ${POSTGRES_PASS:4uZfanZTqJ9ZBiegFjBjJaxY2kakHJFG}
+    url: ${POSTGRES_HOST}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASS}
     driver-class-name: org.postgresql.Driver
   flyway:
     locations: classpath:db/migration
-    url: ${POSTGRES_HOST:jdbc:postgresql://dpg-d6u8dfia214c73d0aoeg-a.oregon-postgres.render.com/dbhomefinance}
-    user: ${POSTGRES_USER:homefinance}
-    password: ${POSTGRES_PASS:4uZfanZTqJ9ZBiegFjBjJaxY2kakHJFG}
+    url: ${POSTGRES_HOST}
+    user: ${POSTGRES_USER}
+    password: ${POSTGRES_PASS}
   jpa:
     open-in-view: false
     hibernate:
@@ -23,12 +23,13 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: https://acncrrpfandiezenajnl.supabase.co/auth/v1
+          issuer-uri: ${SUPABASE_PROJECT_URL}/auth/v1
 
 supabase:
-  url: https://acncrrpfandiezenajnl.supabase.co
+  url: ${SUPABASE_PROJECT_URL}
   api:
-    key: sb_publishable_3RbqTIr3CBsVgegQnURHOg_b-V3eIyL
+    key: ${SUPABASE_PUBLIC_API_KEY}
+    secret-key: ${SUPABASE_SECRET_API_KEY}
 logging:
   level:
     com.example.demo: "INFO"

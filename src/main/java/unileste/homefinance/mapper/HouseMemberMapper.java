@@ -1,5 +1,6 @@
 package unileste.homefinance.mapper;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import unileste.homefinance.DTOs.houseMember.HouseMemberDTO;

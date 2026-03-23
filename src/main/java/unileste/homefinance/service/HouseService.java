@@ -1,5 +1,6 @@
 package unileste.homefinance.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -10,6 +11,7 @@ import unileste.homefinance.domain.constants.MemberStatus;
 import unileste.homefinance.domain.entity.House;
 import unileste.homefinance.domain.entity.HouseMember;
 import unileste.homefinance.exceptions.HouseException;
+import unileste.homefinance.exceptions.HouseNotFoundException;
 import unileste.homefinance.mapper.HouseMemberMapper;
 import unileste.homefinance.repository.HouseMemberRepository;
 import unileste.homefinance.repository.HouseRepository;
@@ -26,7 +28,7 @@ public class HouseService {
     private final JwtUtils jwtUtils;
     private final HouseRepository houseRepository;
     private final HouseMemberMapper houseMemberMapper;
-    private final HouseMemberRepository  houseMemberRepository;
+    private final HouseMemberRepository houseMemberRepository;
 
     public HouseDTO createNewHouse(CreateHouseRequestBody request) {
         log.info("createNewHouse() - [START] - userId: {} | houseName: {}", jwtUtils.getUserId(), request.getName());
@@ -34,7 +36,7 @@ public class HouseService {
         request.validateCreateHouseRequestBody();
         log.info("createNewHouse() -  request is Valid");
         log.info("createNewHouse() - validating if user is active in other house");
-        if(houseMemberRepository.existsByUserIdAndStatus(UUID.fromString(jwtUtils.getUserId()), MemberStatus.ACTIVE)) {
+        if (houseMemberRepository.existsByUserIdAndStatus(UUID.fromString(jwtUtils.getUserId()), MemberStatus.ACTIVE)) {
             log.error("createNewHouse() - user {} is already active in another house", jwtUtils.getUserId());
             throw new HouseException("User is already active in another house. Please leave the current house before creating a new one.");
         }
@@ -42,6 +44,20 @@ public class HouseService {
         House newHouseSaved = houseRepository.save(newHouseData);
         log.info("createNewHouse() - [END] - successfully created house - houseId: {}", newHouseSaved.getId());
         return buildHouseResponse(newHouseSaved);
+    }
+
+    @Transactional
+    public HouseDTO getActiveHouseOfUser() {
+        log.info("getActiveHouseOfUser() - [START] - userId: {}", jwtUtils.getUserId());
+        log.info("getActiveHouseOfUser() - validating if user has a active house");
+        HouseMember memberData = houseMemberRepository.findByUserIdAndStatus(UUID.fromString(jwtUtils.getUserId()), MemberStatus.ACTIVE).
+                orElseThrow(() -> new HouseNotFoundException("User is not active in a house"));
+        log.info("getActiveHouseOfUser() - user has an active house - houseId: {}", memberData.getHouse().getId());
+        log.info("getActiveHouseOfUser() - retrieving house data from database");
+        House houseEntityData = houseRepository.findById(memberData.getHouse().getId())
+                .orElseThrow(() -> new HouseNotFoundException("House not found for the active membership"));
+        log.info("getActiveHouseOfUser() - [END] - successfully retrieved active house for user - houseId: {}", houseEntityData.getId());
+        return buildHouseResponse(houseEntityData);
     }
 
     private HouseDTO buildHouseResponse(House house) {

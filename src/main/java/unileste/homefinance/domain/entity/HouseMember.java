@@ -1,9 +1,7 @@
 package unileste.homefinance.domain.entity;
 
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import unileste.homefinance.domain.constants.MemberRole;
 import unileste.homefinance.domain.constants.MemberStatus;
 
@@ -12,9 +10,10 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "house_members")
-@Getter
-@Setter
 @Builder
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class HouseMember {
 
     @Id

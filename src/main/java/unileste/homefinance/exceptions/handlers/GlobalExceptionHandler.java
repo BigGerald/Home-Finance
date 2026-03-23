@@ -11,6 +11,7 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 import unileste.homefinance.DTOs.deafult.DefaultErrorResponse;
 import unileste.homefinance.exceptions.AuthException;
 import unileste.homefinance.exceptions.HouseException;
+import unileste.homefinance.exceptions.HouseNotFoundException;
 
 
 @ControllerAdvice
@@ -57,5 +58,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<DefaultErrorResponse> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException ex) {
         log.info("handleHttpRequestMethodNotSupportedException - {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(DefaultErrorResponse.builder().message(ex.getMessage()).build());
+    }
+
+    @ExceptionHandler(HouseNotFoundException.class)
+    public ResponseEntity<DefaultErrorResponse> handleHouseNotFoundException(HouseNotFoundException ex) {
+        log.info("handleHouseNotFoundException - {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(DefaultErrorResponse.builder().message(ex.getMessage()).build());
     }
 }

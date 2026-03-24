@@ -1,7 +1,10 @@
 package unileste.homefinance.domain.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import unileste.homefinance.domain.constants.MemberRole;
 import unileste.homefinance.domain.constants.MemberStatus;
 

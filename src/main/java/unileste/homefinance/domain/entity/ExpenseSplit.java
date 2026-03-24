@@ -1,8 +1,7 @@
 package unileste.homefinance.domain.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import unileste.homefinance.domain.constants.ExpenseStatus;
@@ -15,6 +14,9 @@ import java.util.UUID;
 @Table(name = "expense_splits")
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class ExpenseSplit {
 
     @Id

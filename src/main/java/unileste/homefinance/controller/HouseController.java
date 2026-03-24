@@ -19,6 +19,8 @@ import unileste.homefinance.DTOs.house.HouseDTO;
 import unileste.homefinance.DTOs.house.LeaveHouseResponse;
 import unileste.homefinance.service.HouseService;
 
+import java.util.UUID;
+
 @RestController
 @RequiredArgsConstructor
 @Slf4j
@@ -115,11 +117,69 @@ public class HouseController {
         return ResponseEntity.ok(houseData);
     }
 
+    @Operation(summary = "Deixar residência atual",
+            description = "Endpoint para o usuário deixar a residência ativa atual. O usuário será removido como membro da residência e não terá mais acesso aos dados e funcionalidades associadas a essa residência. Caso o Usuario seja administrador, o membro mais antigo se torna o administrador, caso não existam outros membros mais na casa, ela sera excluida permanentemente")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuário deixou a residência com sucesso"),
+            @ApiResponse(responseCode = "401", description = "Não autorizado, token de autenticação ausente ou inválido",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DefaultErrorResponse.class)
+                    )),
+            @ApiResponse(responseCode = "400", description = "Residência ativa não encontrada para o usuário",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DefaultErrorResponse.class)
+                    )),
+            @ApiResponse(responseCode = "500", description = "Erro interno do servidor",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DefaultErrorResponse.class)
+                    ))
+    })
     @DeleteMapping("/house/leave")
     public ResponseEntity<LeaveHouseResponse> leaveHouse() {
         log.info("leaveHouse() - [START]");
         LeaveHouseResponse response = houseService.leaveActualHouse();
         log.info("leaveHouse() - [END]");
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Remover membro da residência (apenas para administradores)",
+            description = "Endpoint para o administrador da residência remover um membro específico da residência ativa. O administrador deve fornecer o ID do usuário a ser removido. O membro removido perderá acesso aos dados e funcionalidades associadas à residência. Apenas administradores têm permissão para acessar este endpoint.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Membro removido da residência com sucesso"),
+            @ApiResponse(responseCode = "401", description = "Não autorizado, token de autenticação ausente ou inválido",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DefaultErrorResponse.class)
+                    )),
+            @ApiResponse(responseCode = "403", description = "Proibido, o usuário autenticado não é o administrador da residência ativa",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DefaultErrorResponse.class)
+                    )),
+            @ApiResponse(responseCode = "400", description = "Requisição inválida, por exemplo, ID do usuário ausente ou inválido",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DefaultErrorResponse.class)
+                    )),
+            @ApiResponse(responseCode = "404", description = "Residência ativa não encontrada para o usuário ou usuário a ser removido não encontrado na residência",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DefaultErrorResponse.class)
+                    )),
+            @ApiResponse(responseCode = "500", description = "Erro interno do servidor",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DefaultErrorResponse.class)
+                    ))
+    })
+    @DeleteMapping("/house/remove-member")
+    public ResponseEntity<LeaveHouseResponse> removeMemberFromHouse(@PathParam("userId") String userId) {
+        log.info("removeMemberFromHouse() - [START]");
+        LeaveHouseResponse response = houseService.removeMemberFromHouseByHouseAdmin(UUID.fromString(userId));
+        log.info("removeMemberFromHouse() - [END]");
         return ResponseEntity.ok(response);
     }
 }

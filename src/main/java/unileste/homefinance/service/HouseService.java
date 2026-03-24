@@ -21,6 +21,7 @@ import unileste.homefinance.utils.JwtUtils;
 import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -45,7 +46,7 @@ public class HouseService {
         House newHouseData = buildNewHouseEntity(request.getName());
         House newHouseSaved = houseRepository.save(newHouseData);
         log.info("createNewHouse() - [END] - successfully created house - houseId: {}", newHouseSaved.getId());
-        return buildHouseResponse(newHouseSaved);
+        return buildHouseResponseWithActiveMembers(newHouseSaved);
     }
 
     @Transactional
@@ -59,7 +60,7 @@ public class HouseService {
         House houseEntityData = houseRepository.findById(memberData.getHouse().getId())
                 .orElseThrow(() -> new HouseNotFoundException("House not found for the active membership"));
         log.info("getActiveHouseOfUser() - [END] - successfully retrieved active house for user - houseId: {}", houseEntityData.getId());
-        return buildHouseResponse(houseEntityData);
+        return buildHouseResponseWithActiveMembers(houseEntityData);
     }
 
     @Transactional
@@ -85,7 +86,7 @@ public class HouseService {
                 .build());
         houseRepository.save(houseEntityData);
         log.info("joinHouseWithInviteCode() - [END] - user successfully joined the house");
-        return buildHouseResponse(houseEntityData);
+        return buildHouseResponseWithActiveMembers(houseEntityData);
     }
 
     @Transactional
@@ -120,10 +121,36 @@ public class HouseService {
     }
 
     @Transactional
-    public void removeAdminFromHouse(HouseMember memberData) {
+    public LeaveHouseResponse removeMemberFromHouseByHouseAdmin(UUID userId) {
+        UUID adminId = UUID.fromString(jwtUtils.getUserId());
+        log.info("removeMemberFromHouseByHouseAdmin() - [START] - adminId: {} - userId: {}", adminId, userId.toString());
+        if (adminId.equals(userId)) {
+            throw new HouseException("Members cannot remove themselves, use the leaveHouse method");
+        }
+        log.info("removeMemberFromHouseByHouseAdmin() - validating if request was made by the house administrator");
+        HouseMember adminData = houseMemberRepository.findByUserIdAndRoleAndStatus(adminId, MemberRole.ADMIN, MemberStatus.ACTIVE)
+                .orElseThrow(() -> {
+                    log.error("removeMemberFromHouseByHouseAdmin() - user is not the house administrator");
+                    return new HouseException("User is not a house administrator");
+                });
+        log.info("removeMemberFromHouseByHouseAdmin() - user is a house administrator");
+        log.info("removeMemberFromHouseByHouseAdmin() - validating if the member to be removed belongs to the administrator's house");
+        House administratorHouse = adminData.getHouse();
+        List<HouseMember> administratorHouseMembers = administratorHouse.getMembers();
+        HouseMember memberData = administratorHouseMembers.stream()
+                .filter(member -> member.getUserId().equals(userId))
+                .filter(member -> member.getStatus() == MemberStatus.ACTIVE)
+                .findFirst()
+                .orElseThrow(() -> new HouseException("The member to be removed does not belong to the administrator's house"));
+        log.info("removeMemberFromHouseByHouseAdmin() - member to be removed found in the administrator's house - userId: {}", memberData.getUserId());
+        removeMemberFromHouse(memberData);
+        return new LeaveHouseResponse("Member has been removed from the house successfully");
+    }
+
+    private void removeAdminFromHouse(HouseMember memberData) {
         log.info("removeAdminFromHouse() - [START] - userId: {}", memberData.getUserId());
         log.info("removeAdminFromHouse() - validating if user is the administrator");
-        if (!houseMemberRepository.existsByUserIdAndHouseIdAndRoleAndStatus(memberData.getUserId(), memberData.getHouse().getId(), MemberRole.ADMIN, MemberStatus.ACTIVE)) {
+        if (houseMemberRepository.existsByUserIdAndHouseIdAndRoleAndStatus(memberData.getUserId(), memberData.getHouse().getId(), MemberRole.ADMIN, MemberStatus.ACTIVE)) {
             log.error("removeAdminFromHouse() - user is not the administrator");
             throw new HouseException("User is not the house administrator");
         }
@@ -148,11 +175,10 @@ public class HouseService {
         log.info("removeAdminFromHouse() - [END] - administrator removed and new administrator assigned successfully");
     }
 
-    @Transactional
-    public void removeMemberFromHouse(HouseMember memberData) {
+    private void removeMemberFromHouse(HouseMember memberData) {
         log.info("removeMemberFromHouse() - [START] - userId: {}", memberData.getUserId());
         log.info("removeMemberFromHouse() - validating if user is a member");
-        if (!houseMemberRepository.existsByUserIdAndHouseIdAndRoleAndStatus(memberData.getUserId(), memberData.getHouse().getId(), MemberRole.ADMIN, MemberStatus.ACTIVE)) {
+        if (houseMemberRepository.existsByUserIdAndHouseIdAndRoleAndStatus(memberData.getUserId(), memberData.getHouse().getId(), MemberRole.ADMIN, MemberStatus.ACTIVE)) {
             log.error("removeMemberFromHouse() - user is the house administrator");
             throw new HouseException("User is the house administrator, use the right method to leave the member");
         }
@@ -201,7 +227,21 @@ public class HouseService {
         });
     }
 
-    private HouseDTO buildHouseResponse(House house) {
+    private HouseDTO buildHouseResponseWithActiveMembers(House house) {
+        HouseDTO houseDTO = new HouseDTO();
+        houseDTO.setId(house.getId().toString());
+        houseDTO.setName(house.getName());
+        houseDTO.setInviteCode(house.getInviteCode());
+        houseDTO.setAdminId(house.getAdminId().toString());
+        houseDTO.setBalance(house.getBalance());
+        houseDTO.setMembers(house.getMembers().stream()
+                .filter(member -> member.getStatus().equals(MemberStatus.ACTIVE))
+                .map(houseMemberMapper::toDTO)
+                .toList());
+        return houseDTO;
+    }
+
+    private HouseDTO buildCompleteHouseResponse(House house) {
         HouseDTO houseDTO = new HouseDTO();
         houseDTO.setId(house.getId().toString());
         houseDTO.setName(house.getName());

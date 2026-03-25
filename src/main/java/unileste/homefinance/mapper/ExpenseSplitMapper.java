@@ -2,7 +2,7 @@ package unileste.homefinance.mapper;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import unileste.homefinance.DTOs.expense.ExpenseSplitDTO;
+import unileste.homefinance.DTOs.expenseSplit.ExpenseSplitDTO;
 import unileste.homefinance.domain.entity.ExpenseSplit;
 import unileste.homefinance.service.UserService;
 
@@ -13,6 +13,7 @@ public class ExpenseSplitMapper {
 
     public ExpenseSplitDTO toExpenseSplitDTO(ExpenseSplit expenseSplit) {
         ExpenseSplitDTO expenseSplitDTO = new ExpenseSplitDTO();
+        expenseSplitDTO.setId(expenseSplit.getId().toString());
         expenseSplitDTO.setUserId(expenseSplit.getUserId().toString());
         expenseSplitDTO.setUserName(userService.getUserById(expenseSplit.getUserId().toString()).getDisplayName());
         expenseSplitDTO.setStatus(expenseSplit.getStatus());

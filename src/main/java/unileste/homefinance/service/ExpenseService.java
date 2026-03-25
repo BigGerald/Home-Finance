@@ -8,16 +8,17 @@ import org.springframework.stereotype.Service;
 import unileste.homefinance.DTOs.expense.CreateExpenseRequestBody;
 import unileste.homefinance.DTOs.expense.ExpenseDTO;
 import unileste.homefinance.DTOs.expense.UpdateExpenseStatusRequest;
+import unileste.homefinance.DTOs.expenseSplit.ExpenseSplitDTO;
+import unileste.homefinance.DTOs.expenseSplit.UpdateExpenseSplitStausRequest;
 import unileste.homefinance.domain.constants.ExpenseStatus;
 import unileste.homefinance.domain.constants.MemberStatus;
-import unileste.homefinance.domain.entity.Category;
-import unileste.homefinance.domain.entity.Expense;
-import unileste.homefinance.domain.entity.House;
-import unileste.homefinance.domain.entity.HouseMember;
+import unileste.homefinance.domain.entity.*;
 import unileste.homefinance.exceptions.ExpenseException;
 import unileste.homefinance.mapper.ExpenseMapper;
+import unileste.homefinance.mapper.ExpenseSplitMapper;
 import unileste.homefinance.repository.CategoryRepository;
 import unileste.homefinance.repository.ExpenseRepository;
+import unileste.homefinance.repository.ExpenseSplitRepository;
 import unileste.homefinance.repository.HouseMemberRepository;
 import unileste.homefinance.utils.JwtUtils;
 
@@ -33,9 +34,11 @@ public class ExpenseService {
     private final ExpenseRepository expenseRepository;
     private final HouseMemberRepository houseMemberRepository;
     private final CategoryRepository categoryRepository;
+    private final ExpenseSplitRepository expenseSplitRepository;
     private final UserService userService;
     private final JwtUtils jwtUtils;
     private final ExpenseMapper expenseMapper;
+    private final ExpenseSplitMapper expenseSplitMapper;
 
     @Transactional
     public List<ExpenseDTO> getHouseExpenses(ExpenseStatus status, Integer month, Integer year, String responsibleUserId) {
@@ -125,7 +128,7 @@ public class ExpenseService {
         return expenseMapper.expenseToExpenseDTO(expense);
     }
 
-    public ExpenseDTO updateExpenseStatus(UUID expenseId, UpdateExpenseStatusRequest  updateExpenseStatusRequest) {
+    public ExpenseDTO updateExpenseStatus(UUID expenseId, UpdateExpenseStatusRequest updateExpenseStatusRequest) {
         log.info("updateExpenseStatus() - [START] - expense with id {} to status {}", expenseId, updateExpenseStatusRequest.getStatus().getValue());
         HouseMember requestHouseMember = houseMemberRepository.findByUserIdAndStatus(UUID.fromString(jwtUtils.getUserId()), MemberStatus.ACTIVE)
                 .orElseThrow(() -> {
@@ -136,14 +139,36 @@ public class ExpenseService {
             log.error("updateExpenseStatus() - Expense not found with id {}", expenseId);
             return new EntityNotFoundException("Expense not found");
         });
-        if(expense.getStatus() == updateExpenseStatusRequest.getStatus()) {
+        if (expense.getStatus() == updateExpenseStatusRequest.getStatus()) {
             log.info("updateExpenseStatus() - [END] - Expense already has status {}, no update needed for expense {}", updateExpenseStatusRequest.getStatus().getValue(), expense.getId());
             return expenseMapper.expenseToExpenseDTO(expense);
         }
         expense.setStatus(updateExpenseStatusRequest.getStatus());
         Expense updatedExpense = expenseRepository.save(expense);
-        log.info("updateExpenseStatus() - [END] - Expense updated for expense {} - new status: {}", updatedExpense.getId(),  updatedExpense.getStatus());
+        log.info("updateExpenseStatus() - [END] - Expense updated for expense {} - new status: {}", updatedExpense.getId(), updatedExpense.getStatus());
         return expenseMapper.expenseToExpenseDTO(updatedExpense);
+    }
+
+    @Transactional
+    public ExpenseSplitDTO updateExpenseSplitStatus(UUID id, UpdateExpenseSplitStausRequest updateExpenseSplitStausRequest) {
+        UUID requestUserId = UUID.fromString(jwtUtils.getUserId());
+        log.info("updateExpenseSplitStatus() - [START] - user:{} request update expense split with id {} to split status {}", requestUserId, id, updateExpenseSplitStausRequest.getStatus().getValue());
+        ExpenseSplit splitEntityData = expenseSplitRepository.findById(id).orElseThrow(() -> {
+            log.error("updateExpenseSplitStatus() - ExpenseSplit not found with id {}", id);
+            return new EntityNotFoundException("Expense split not found");
+        });
+        log.info("updateExpenseSplitStatus() - Expense split found, validate if the user belongs to the expense house");
+        House houseData = splitEntityData.getExpense().getHouse();
+        validateIfUsersBelongToHouse(List.of(requestUserId.toString()), houseData);
+        log.info("updateExpenseSplitStatus() - User belongs to the house");
+        if (splitEntityData.getStatus() == updateExpenseSplitStausRequest.getStatus()) {
+            log.info("updateExpenseSplitStatus() - [END] - Expense split already has status {}, no update needed for expense split {}", updateExpenseSplitStausRequest.getStatus().getValue(), splitEntityData.getId());
+            return expenseSplitMapper.toExpenseSplitDTO(splitEntityData);
+        }
+        splitEntityData.setStatus(updateExpenseSplitStausRequest.getStatus());
+        expenseSplitRepository.save(splitEntityData);
+        log.info("updateExpenseSplitStatus() - [END] - Expense split updated for expense split {} - new status: {}", splitEntityData.getId(), splitEntityData.getStatus());
+        return expenseSplitMapper.toExpenseSplitDTO(splitEntityData);
     }
 
     private void validateIfUsersBelongToHouse(List<String> usersIds, House house) {

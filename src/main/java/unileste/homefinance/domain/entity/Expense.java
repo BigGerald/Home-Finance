@@ -70,7 +70,7 @@ public class Expense {
         for (String userId : userIds) {
             ExpenseSplit split = new ExpenseSplit();
             split.setExpense(this);
-            split.setAmount(totalAmount.divide(BigDecimal.valueOf(userIds.size())));
+            split.setAmount(totalAmount.divide(BigDecimal.valueOf(userIds.size()), 2));
             split.setUserId(UUID.fromString(userId));
             split.setStatus(ExpenseStatus.PENDING);
             splits.add(split);

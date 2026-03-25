@@ -1,6 +1,7 @@
 package unileste.homefinance.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -16,6 +17,8 @@ import unileste.homefinance.DTOs.deafult.DefaultErrorResponse;
 import unileste.homefinance.DTOs.expense.CreateExpenseRequestBody;
 import unileste.homefinance.DTOs.expense.ExpenseDTO;
 import unileste.homefinance.DTOs.expense.UpdateExpenseStatusRequest;
+import unileste.homefinance.DTOs.expenseSplit.ExpenseSplitDTO;
+import unileste.homefinance.DTOs.expenseSplit.UpdateExpenseSplitStausRequest;
 import unileste.homefinance.domain.constants.ExpenseStatus;
 import unileste.homefinance.domain.entity.Category;
 import unileste.homefinance.service.CategoryService;
@@ -54,7 +57,13 @@ public class ExpenseController {
     }
 
     @Operation(summary = "Obter despesas da casa",
-            description = "Retorna uma lista de despesas da casa do usuário autenticado, com opções de filtro por status, mês, ano e responsável.")
+            description = "Retorna uma lista de despesas da casa do usuário autenticado, com opções de filtro por status, mês, ano e responsável.",
+    parameters = {
+            @Parameter(name = "status", description = "Status da despesa para filtrar (PENDING, PAID)"),
+            @Parameter(name = "month", description = "Mês para filtrar despesas (1-12)"),
+            @Parameter(name = "year", description = "Ano para filtrar despesas ( 2024)"),
+            @Parameter(name = "responsibleId", description = "ID do responsável para filtrar despesas")
+    })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Despesas obtidas com sucesso"),
             @ApiResponse(responseCode = "400", description = "Requisição inválida, como combinação inválida de filtros",
@@ -116,7 +125,8 @@ public class ExpenseController {
     }
 
     @Operation(summary = "Atualizar status de despesa",
-            description = "Atualiza o status de uma despesa específica da casa do usuário autenticado, identificada pelo ID.")
+            description = "Atualiza o status de uma despesa específica da casa do usuário autenticado, identificada pelo ID.",
+            parameters = {@Parameter(name = "id", description = "ID da despesa a ser atualizada", required = true)})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Status da despesa atualizado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Requisição inválida, como ID em formato inválido ou status inválido",
@@ -129,10 +139,32 @@ public class ExpenseController {
                     content = @Content(schema = @Schema(implementation = DefaultErrorResponse.class)))
     })
     @PatchMapping("/{id}/status")
-    public ResponseEntity<ExpenseDTO> updateExpenseStatus(@PathVariable(name = "id") UUID id, @RequestBody UpdateExpenseStatusRequest updateExpenseStatusRequest) {
+    public ResponseEntity<ExpenseDTO> updateExpenseStatus(@PathVariable UUID id, @RequestBody UpdateExpenseStatusRequest updateExpenseStatusRequest) {
         log.info("updateExpenseStatus() - [START]");
         ExpenseDTO response = expenseService.updateExpenseStatus(id, updateExpenseStatusRequest);
         log.info("updateExpenseStatus() - [END]");
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Atualizar status de divisão de despesa",
+            description = "Atualiza o status de uma divisão específica de despesa da casa do usuário autenticado, identificada pelo ID.",
+            parameters = {@Parameter(name = "id", description = "ID da divisão de despesa a ser atualizada", required = true)})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Status da divisão de despesa atualizado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Requisição inválida, como ID em formato inválido ou status inválido",
+                    content = @Content(schema = @Schema(implementation = DefaultErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Não autorizado, usuário não autenticado",
+                    content = @Content(schema = @Schema(implementation = DefaultErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Divisão de despesa não encontrada",
+                    content = @Content(schema = @Schema(implementation = DefaultErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Erro interno do servidor",
+                    content = @Content(schema = @Schema(implementation = DefaultErrorResponse.class)))
+    })
+    @PatchMapping("/split/{id}/status")
+    public ResponseEntity<ExpenseSplitDTO> updateExpenseSplitStatus(@PathVariable UUID id, @RequestBody UpdateExpenseSplitStausRequest updateExpenseSplitStausRequest) {
+        log.info("updateExpenseSplitStatus() - [START]");
+        ExpenseSplitDTO response = expenseService.updateExpenseSplitStatus(id, updateExpenseSplitStausRequest);
+        log.info("updateExpenseSplitStatus() - [END]");
         return ResponseEntity.ok(response);
     }
 

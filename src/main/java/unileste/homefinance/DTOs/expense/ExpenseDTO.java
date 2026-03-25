@@ -3,6 +3,7 @@ package unileste.homefinance.DTOs.expense;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import unileste.homefinance.DTOs.expenseSplit.ExpenseSplitDTO;
 import unileste.homefinance.domain.constants.ExpenseStatus;
 
 import java.math.BigDecimal;

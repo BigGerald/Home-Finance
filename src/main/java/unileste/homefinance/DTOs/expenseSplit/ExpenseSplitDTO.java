@@ -1,4 +1,4 @@
-package unileste.homefinance.DTOs.expense;
+package unileste.homefinance.DTOs.expenseSplit;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 @Data
 @Builder
 public class ExpenseSplitDTO {
+    private String id;
     private String userId;
     private String userName;
     private ExpenseStatus status;

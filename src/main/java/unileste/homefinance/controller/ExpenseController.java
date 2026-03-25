@@ -15,12 +15,14 @@ import org.springframework.web.bind.annotation.*;
 import unileste.homefinance.DTOs.deafult.DefaultErrorResponse;
 import unileste.homefinance.DTOs.expense.CreateExpenseRequestBody;
 import unileste.homefinance.DTOs.expense.ExpenseDTO;
+import unileste.homefinance.DTOs.expense.UpdateExpenseStatusRequest;
 import unileste.homefinance.domain.constants.ExpenseStatus;
 import unileste.homefinance.domain.entity.Category;
 import unileste.homefinance.service.CategoryService;
 import unileste.homefinance.service.ExpenseService;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/expenses")
@@ -31,6 +33,25 @@ public class ExpenseController {
 
     private final ExpenseService expenseService;
     private final CategoryService categoryService;
+
+    @Operation(summary = "Registrar nova despesa",
+            description = "Registra uma nova despesa para a casa do usuário autenticado.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Despesa criada com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Requisição inválida, como dados de entrada inválidos",
+                    content = @Content(schema = @Schema(implementation = DefaultErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Não autorizado, usuário não autenticado",
+                    content = @Content(schema = @Schema(implementation = DefaultErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Erro interno do servidor",
+                    content = @Content(schema = @Schema(implementation = DefaultErrorResponse.class)))
+    })
+    @PostMapping()
+    public ResponseEntity<ExpenseDTO> createExpense(@RequestBody CreateExpenseRequestBody requestBody) {
+        log.info("createExpense() - [START]");
+        ExpenseDTO response = expenseService.createExpense(requestBody);
+        log.info("createExpense() - [END]");
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
 
     @Operation(summary = "Obter despesas da casa",
             description = "Retorna uma lista de despesas da casa do usuário autenticado, com opções de filtro por status, mês, ano e responsável.")
@@ -56,23 +77,25 @@ public class ExpenseController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping()
-    @Operation(summary = "Registrar nova despesa",
-            description = "Registra uma nova despesa para a casa do usuário autenticado.")
+    @Operation(summary = "Obter despesa por ID",
+            description = "Retorna os detalhes de uma despesa específica da casa do usuário autenticado, identificada pelo ID.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Despesa criada com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Requisição inválida, como dados de entrada inválidos",
+            @ApiResponse(responseCode = "200", description = "Despesa obtida com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Requisição inválida, como ID em formato inválido",
                     content = @Content(schema = @Schema(implementation = DefaultErrorResponse.class))),
             @ApiResponse(responseCode = "401", description = "Não autorizado, usuário não autenticado",
+                    content = @Content(schema = @Schema(implementation = DefaultErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Despesa não encontrada",
                     content = @Content(schema = @Schema(implementation = DefaultErrorResponse.class))),
             @ApiResponse(responseCode = "500", description = "Erro interno do servidor",
                     content = @Content(schema = @Schema(implementation = DefaultErrorResponse.class)))
     })
-    public ResponseEntity<ExpenseDTO> createExpense(@RequestBody CreateExpenseRequestBody requestBody) {
-        log.info("createExpense() - [START]");
-        ExpenseDTO response = expenseService.createExpense(requestBody);
-        log.info("createExpense() - [END]");
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    @GetMapping("/{id}")
+    public ResponseEntity<ExpenseDTO> getExpenseById(@PathVariable(name = "id") UUID id) {
+        log.info("getExpenseById() - [START]");
+        ExpenseDTO response = expenseService.getExpenseById(id);
+        log.info("getExpenseById() - [END]");
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "Obter categorias de despesas",
@@ -91,4 +114,26 @@ public class ExpenseController {
         log.info("getCategories() - [END]");
         return ResponseEntity.ok(response);
     }
+
+    @Operation(summary = "Atualizar status de despesa",
+            description = "Atualiza o status de uma despesa específica da casa do usuário autenticado, identificada pelo ID.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Status da despesa atualizado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Requisição inválida, como ID em formato inválido ou status inválido",
+                    content = @Content(schema = @Schema(implementation = DefaultErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Não autorizado, usuário não autenticado",
+                    content = @Content(schema = @Schema(implementation = DefaultErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Despesa não encontrada",
+                    content = @Content(schema = @Schema(implementation = DefaultErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Erro interno do servidor",
+                    content = @Content(schema = @Schema(implementation = DefaultErrorResponse.class)))
+    })
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<ExpenseDTO> updateExpenseStatus(@PathVariable(name = "id") UUID id, @RequestBody UpdateExpenseStatusRequest updateExpenseStatusRequest) {
+        log.info("updateExpenseStatus() - [START]");
+        ExpenseDTO response = expenseService.updateExpenseStatus(id, updateExpenseStatusRequest);
+        log.info("updateExpenseStatus() - [END]");
+        return ResponseEntity.ok(response);
+    }
+
 }

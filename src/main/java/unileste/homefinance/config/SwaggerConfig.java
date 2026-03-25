@@ -5,11 +5,19 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.event.EventListener;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 
+import java.io.FileWriter;
+import java.io.InputStream;
+import java.net.URL;
+
 @Configuration
+@Slf4j
 public class SwaggerConfig {
 
     @Bean
@@ -36,5 +44,22 @@ public class SwaggerConfig {
                 "/swagger-ui/**",
                 "/swagger-ui.html"
         );
+    }
+    @EventListener(ApplicationReadyEvent.class)
+    public void exportOpenApi() {
+        try {
+            String url = "http://localhost:80/v3/api-docs";
+
+            InputStream inputStream = new URL(url).openStream();
+            String json = new String(inputStream.readAllBytes());
+
+            FileWriter writer = new FileWriter("HomeFinanceOpenApi.json");
+            writer.write(json);
+            writer.close();
+
+            log.info("✅ OpenAPI gerado com sucesso!");
+        } catch (Exception e) {
+            log.info("❌ Erro ao gerar OpenAPI: " + e.getMessage());
+        }
     }
 }

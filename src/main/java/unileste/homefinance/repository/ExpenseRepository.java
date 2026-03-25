@@ -8,12 +8,14 @@ import unileste.homefinance.domain.entity.Expense;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
     List<Expense> findByHouseId(UUID houseId);
 
+    Optional<Expense> findByIdAndHouseId(UUID id, UUID houseId);
     @Query("""
                 SELECT e FROM Expense e
                 WHERE e.house.id = :houseId

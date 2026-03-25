@@ -1,6 +1,7 @@
 package unileste.homefinance.exceptions.handlers;
 
 import feign.FeignException;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -79,5 +80,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<DefaultErrorResponse> handleExpenseException(ExpenseException ex) {
         log.warn("handleExpenseException - {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(DefaultErrorResponse.builder().message(ex.getMessage()).build());
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<DefaultErrorResponse> handleEntityNotFoundException(EntityNotFoundException ex) {
+        log.warn("handleEntityNotFoundException - {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(DefaultErrorResponse.builder().message(ex.getMessage()).build());
     }
 }

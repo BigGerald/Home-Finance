@@ -173,6 +173,7 @@ public class ExpenseService {
         return expenseSplitMapper.toExpenseSplitDTO(splitEntityData);
     }
 
+    @Transactional
     public DeleteExpenseResponse deleteExpenseById(UUID id) {
         UUID requestUserId = UUID.fromString(jwtUtils.getUserId());
         log.info("deleteExpenseById() - [START] - user {} request delete expense with id {}", requestUserId, id);

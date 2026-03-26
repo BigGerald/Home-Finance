@@ -2,6 +2,7 @@ package unileste.homefinance.DTOs.auth.Supabase.User;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import unileste.homefinance.DTOs.user.UpdateUserDataRequest;
@@ -9,6 +10,7 @@ import unileste.homefinance.DTOs.user.UpdateUserDataRequest;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Data
 public class SupabaseUpdateUserDataRequest {
     private String email;

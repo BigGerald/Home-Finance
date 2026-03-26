@@ -25,6 +25,10 @@ spring:
         jwt:
           issuer-uri: ${SUPABASE_PROJECT_URL}/auth/v1
 
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+
 supabase:
   url: ${SUPABASE_PROJECT_URL}
   api:

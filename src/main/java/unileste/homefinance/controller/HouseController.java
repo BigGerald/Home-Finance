@@ -16,6 +16,7 @@ import unileste.homefinance.DTOs.deafult.DefaultErrorResponse;
 import unileste.homefinance.DTOs.house.CreateHouseRequestBody;
 import unileste.homefinance.DTOs.house.HouseDTO;
 import unileste.homefinance.DTOs.house.LeaveHouseResponse;
+import unileste.homefinance.DTOs.house.resume.HouseResumeDTO;
 import unileste.homefinance.service.HouseService;
 
 import java.util.UUID;
@@ -23,6 +24,7 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
+@RequestMapping("/house")
 @Tag(name = "House", description = "Endpoints relacionados a controle das residencias")
 public class HouseController {
     private final HouseService houseService;
@@ -49,7 +51,7 @@ public class HouseController {
                             schema = @Schema(implementation = DefaultErrorResponse.class)
                     ))
     })
-    @PostMapping("/house/create")
+    @PostMapping("/create")
     public ResponseEntity<HouseDTO> createNewHouse(@RequestBody CreateHouseRequestBody createHouseRequestBody) {
         log.info("createNewHouse() - [START]");
         HouseDTO newHouseDTO = houseService.createNewHouse(createHouseRequestBody);
@@ -76,7 +78,7 @@ public class HouseController {
                             schema = @Schema(implementation = DefaultErrorResponse.class)
                     ))
     })
-    @GetMapping("/house/my-house")
+    @GetMapping("/my-house")
     public ResponseEntity<HouseDTO> getActiveHouse() {
         log.info("getActiveHouse() - [START]");
         HouseDTO houseData = houseService.getActiveHouseOfUser();
@@ -108,7 +110,7 @@ public class HouseController {
                             schema = @Schema(implementation = DefaultErrorResponse.class)
                     ))
     })
-    @PostMapping("/house/join")
+    @PostMapping("/join")
     public ResponseEntity<HouseDTO> joinHouse(@PathParam("inviteCode") String inviteCode) {
         log.info("joinHouse() - [START]");
         HouseDTO houseData = houseService.joinHouseWithInviteCode(inviteCode);
@@ -136,7 +138,7 @@ public class HouseController {
                             schema = @Schema(implementation = DefaultErrorResponse.class)
                     ))
     })
-    @DeleteMapping("/house/leave")
+    @DeleteMapping("/leave")
     public ResponseEntity<LeaveHouseResponse> leaveHouse() {
         log.info("leaveHouse() - [START]");
         LeaveHouseResponse response = houseService.leaveActualHouse();
@@ -174,11 +176,39 @@ public class HouseController {
                             schema = @Schema(implementation = DefaultErrorResponse.class)
                     ))
     })
-    @DeleteMapping("/house/remove-member")
+    @DeleteMapping("/remove-member")
     public ResponseEntity<LeaveHouseResponse> removeMemberFromHouse(@PathParam("userId") String userId) {
         log.info("removeMemberFromHouse() - [START]");
         LeaveHouseResponse response = houseService.removeMemberFromHouseByHouseAdmin(UUID.fromString(userId));
         log.info("removeMemberFromHouse() - [END]");
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Obter resumo financeiro da residência",
+            description = "Endpoint para obter um resumo financeiro da residência ativa do usuário. O resumo inclui informações como saldo total, despesas pendentes do mes, despesas pagas no mes e outras métricas financeiras relevantes para a residência.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Resumo financeiro da residência obtido com sucesso"),
+            @ApiResponse(responseCode = "401", description = "Não autorizado, token de autenticação ausente ou inválido",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DefaultErrorResponse.class)
+                    )),
+            @ApiResponse(responseCode = "404", description = "Residência ativa não encontrada para o usuário",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DefaultErrorResponse.class)
+                    )),
+            @ApiResponse(responseCode = "500", description = "Erro interno do servidor",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DefaultErrorResponse.class)
+                    ))
+    })
+    @GetMapping("/resume")
+    private ResponseEntity<HouseResumeDTO> getHouseResume() {
+        log.info("getHouseResume() - [START]");
+        HouseResumeDTO houseResumeDTO = houseService.getHouseResume();
+        log.info("getHouseResume() - [END]");
+        return ResponseEntity.ok(houseResumeDTO);
     }
 }

@@ -13,7 +13,8 @@ import java.util.UUID;
 public interface HouseMemberRepository extends JpaRepository<HouseMember, UUID> {
 
     boolean existsByUserIdAndStatus(UUID userID, MemberStatus status);
-    Optional<HouseMember> findByUserIdAndStatus(UUID userID, MemberStatus status);
     boolean existsByUserIdAndHouseIdAndRoleAndStatus(UUID userID, UUID houseId, MemberRole role, MemberStatus status);
+    boolean existsByUserIdAndHouseIdAndStatus(UUID userID, UUID houseId, MemberStatus status);
+    Optional<HouseMember> findByUserIdAndStatus(UUID userID, MemberStatus status);
     Optional<HouseMember> findByUserIdAndRoleAndStatus(UUID userID, MemberRole role, MemberStatus status);
 }

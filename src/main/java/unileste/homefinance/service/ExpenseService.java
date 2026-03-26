@@ -128,6 +128,7 @@ public class ExpenseService {
         return expenseMapper.expenseToExpenseDTO(expense);
     }
 
+    @Transactional
     public ExpenseDTO updateExpenseStatus(UUID expenseId, UpdateExpenseStatusRequest updateExpenseStatusRequest) {
         log.info("updateExpenseStatus() - [START] - expense with id {} to status {}", expenseId, updateExpenseStatusRequest.getStatus().getValue());
         HouseMember requestHouseMember = houseMemberRepository.findByUserIdAndStatus(UUID.fromString(jwtUtils.getUserId()), MemberStatus.ACTIVE)

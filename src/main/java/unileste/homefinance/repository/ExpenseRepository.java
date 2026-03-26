@@ -16,6 +16,7 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
     List<Expense> findByHouseId(UUID houseId);
 
     Optional<Expense> findByIdAndHouseId(UUID id, UUID houseId);
+
     @Query("""
                 SELECT e FROM Expense e
                 WHERE e.house.id = :houseId
@@ -31,4 +32,21 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
             LocalDate startDate,
             LocalDate endDate
     );
+
+    @Query("""
+                SELECT e FROM Expense e
+                WHERE e.house.id = :houseId
+                AND e.status = COALESCE(:status, e.status)
+                AND e.dueDate >= COALESCE(:startDate, e.dueDate)
+                AND e.dueDate <= COALESCE(:endDate, e.dueDate)
+                ORDER BY e.dueDate ASC
+            """)
+    List<Expense> findPendingExpensesByHouseIdAndStatusAndDueDateBetween(
+            UUID houseId,
+            ExpenseStatus status,
+            LocalDate startDate,
+            LocalDate endDate
+    );
+
+    List<Expense> findByStatusAndHouseIdAndDueDateBetween(ExpenseStatus status, UUID houseId, LocalDate startDate, LocalDate endDate);
 }

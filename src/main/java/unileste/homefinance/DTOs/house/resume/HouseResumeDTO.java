@@ -1,6 +1,7 @@
 package unileste.homefinance.DTOs.house.resume;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -9,6 +10,7 @@ import java.util.List;
 
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Data
 public class HouseResumeDTO {
     private String houseId;
@@ -17,6 +19,6 @@ public class HouseResumeDTO {
     private BigDecimal balance;
     private PendingExpensesResume pendingExpenses;
     private MonthPaidExpensesResume monthPaidExpenses;
-    private List<ExpenseResume> pendingMonthExpenses;
+    private List<ExpenseResume> nextWeekExpenses;
     private List<UserDebitsResume>  usersDebits;
 }

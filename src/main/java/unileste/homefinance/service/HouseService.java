@@ -7,21 +7,30 @@ import org.springframework.stereotype.Service;
 import unileste.homefinance.DTOs.house.CreateHouseRequestBody;
 import unileste.homefinance.DTOs.house.HouseDTO;
 import unileste.homefinance.DTOs.house.LeaveHouseResponse;
+import unileste.homefinance.DTOs.house.resume.*;
+import unileste.homefinance.domain.constants.ExpenseStatus;
 import unileste.homefinance.domain.constants.MemberRole;
 import unileste.homefinance.domain.constants.MemberStatus;
+import unileste.homefinance.domain.entity.Expense;
+import unileste.homefinance.domain.entity.ExpenseSplit;
 import unileste.homefinance.domain.entity.House;
 import unileste.homefinance.domain.entity.HouseMember;
 import unileste.homefinance.exceptions.HouseException;
 import unileste.homefinance.exceptions.HouseNotFoundException;
 import unileste.homefinance.mapper.HouseMemberMapper;
+import unileste.homefinance.repository.ExpenseRepository;
+import unileste.homefinance.repository.ExpenseSplitRepository;
 import unileste.homefinance.repository.HouseMemberRepository;
 import unileste.homefinance.repository.HouseRepository;
 import unileste.homefinance.utils.JwtUtils;
 
 import java.math.BigDecimal;
 import java.security.SecureRandom;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -32,6 +41,9 @@ public class HouseService {
     private final HouseRepository houseRepository;
     private final HouseMemberMapper houseMemberMapper;
     private final HouseMemberRepository houseMemberRepository;
+    private final ExpenseRepository expenseRepository;
+    private final ExpenseSplitRepository expenseSplitRepository;
+    private final UserService userService;
 
     public HouseDTO createNewHouse(CreateHouseRequestBody request) {
         log.info("createNewHouse() - [START] - userId: {} | houseName: {}", jwtUtils.getUserId(), request.getName());
@@ -145,6 +157,119 @@ public class HouseService {
         log.info("removeMemberFromHouseByHouseAdmin() - member to be removed found in the administrator's house - userId: {}", memberData.getUserId());
         removeMemberFromHouse(memberData);
         return new LeaveHouseResponse("Member has been removed from the house successfully");
+    }
+
+    @Transactional
+    public HouseResumeDTO getHouseResume() {
+        UUID requestUserId = UUID.fromString(jwtUtils.getUserId());
+        HouseResumeDTO houseResume = new HouseResumeDTO();
+        log.info("getHouseResume() - [START] - userId: {}", requestUserId);
+        log.info("getHouseResume() - validating if user has a active house");
+        HouseMember memberData = houseMemberRepository.findByUserIdAndStatus(requestUserId, MemberStatus.ACTIVE).
+                orElseThrow(() -> new HouseNotFoundException("User is not active in a house"));
+        House houseData = memberData.getHouse();
+        log.info("getHouseResume() - user has an active house - houseId: {}", houseData.getId());
+        houseResume.setHouseId(houseData.getId().toString());
+        houseResume.setInviteCode(houseData.getInviteCode());
+        houseResume.setHouseName(houseData.getName());
+        houseResume.setBalance(houseData.getBalance());
+        log.info("getHouseResume() - finding house month pending expenses");
+        PendingExpensesResume pendingExpensesResume = calculatePendingExpensesResume(requestUserId, houseData.getId());
+        log.info("getHouseResume() - house month pending expenses calculated successfully");
+        houseResume.setPendingExpenses(pendingExpensesResume);
+        log.info("getHouseResume() - finding house month paid expenses");
+        List<Expense> monthPaidExpenses = expenseRepository.findByStatusAndHouseIdAndDueDateBetween(ExpenseStatus.PAID, houseData.getId(), LocalDate.now().withDayOfMonth(1), LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth()));
+        log.info("getHouseResume() - house month paid expenses found successfully");
+        MonthPaidExpensesResume monthPaidExpensesResume = calculateMonthPaidExpensesResume(monthPaidExpenses);
+        log.info("getHouseResume() - house month paid expenses calculated successfully");
+        houseResume.setMonthPaidExpenses(monthPaidExpensesResume);
+        log.info("getHouseResume() - finding next week PENDING expenses");
+        houseResume.setNextWeekExpenses(getNextWeekExpensesResume(houseData.getId()));
+        log.info("getHouseResume() - next week PENDING expenses found successfully");
+        log.info("getHouseResume() - finding users debits in the house");
+        houseResume.setUsersDebits(getThisMonthUserDebits(houseData.getId()));
+        log.info("getHouseResume() - users debits calculated successfully");
+        log.info("getHouseResume() - [END]");
+        return houseResume;
+    }
+
+    private List<UserDebitsResume> getThisMonthUserDebits(UUID houseId) {
+
+        List<Expense> monthExpenses = expenseRepository.findPendingExpensesByHouseIdAndStatusAndDueDateBetween(
+                houseId,
+                null,
+                LocalDate.now().withDayOfMonth(1),
+                LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
+        );
+
+        Map<UUID, BigDecimal> userDebitsMap = new HashMap<>();
+
+        for (Expense expense : monthExpenses) {
+            for (ExpenseSplit split : expense.getSplits()) {
+                if (split.getStatus() == ExpenseStatus.PENDING) {
+                    userDebitsMap.merge(
+                            split.getUserId(),
+                            split.getAmount(),
+                            BigDecimal::add
+                    );
+                } else {
+                    userDebitsMap.merge(
+                            split.getUserId(),
+                            BigDecimal.ZERO,
+                            BigDecimal::add
+                    );
+                }
+            }
+        }
+
+        return userDebitsMap.entrySet().stream()
+                .map(entry -> {
+                    UUID userId = entry.getKey();
+                    if (houseMemberRepository.existsByUserIdAndHouseIdAndStatus(userId, houseId, MemberStatus.ACTIVE)) {
+                        BigDecimal total = entry.getValue();
+                        String displayName = userService.getUserById(userId.toString()).getDisplayName();
+                        return new UserDebitsResume(displayName, total);
+                    }
+                    return null;
+                })
+                .toList();
+    }
+
+    private List<ExpenseResume> getNextWeekExpensesResume(UUID houseId) {
+        List<Expense> pendingExpenses = expenseRepository.findByStatusAndHouseIdAndDueDateBetween(ExpenseStatus.PENDING, houseId, LocalDate.now(), LocalDate.now().plusDays(7));
+        return pendingExpenses.stream()
+                .map(expense -> ExpenseResume.builder()
+                        .id(expense.getId().toString())
+                        .title(expense.getTitle())
+                        .amount(expense.getAmount())
+                        .dueDate(expense.getDueDate())
+                        .expenseStatus(expense.getStatus())
+                        .responsibleName(userService.getUserById(expense.getResponsibleId().toString()).getDisplayName())
+                        .build())
+                .toList();
+    }
+
+    private PendingExpensesResume calculatePendingExpensesResume(UUID userId, UUID houseId) {
+        List<Expense> pendingMonthExpenses = expenseRepository.findPendingExpensesByHouseIdAndStatusAndDueDateBetween(
+                houseId,
+                ExpenseStatus.PENDING,
+                LocalDate.now().withDayOfMonth(1),
+                LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
+        );
+        BigDecimal totalAmount = pendingMonthExpenses.stream()
+                .map(Expense::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal userPart = pendingMonthExpenses.stream()
+                .flatMap(expense -> expense.getSplits().stream())
+                .filter(split -> split.getUserId().equals(userId) && split.getStatus() == ExpenseStatus.PENDING)
+                .map(ExpenseSplit::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return new PendingExpensesResume(totalAmount, userPart);
+    }
+
+    private MonthPaidExpensesResume calculateMonthPaidExpensesResume(List<Expense> paidExpenses) {
+        BigDecimal amount = paidExpenses.stream().map(Expense::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+        return new MonthPaidExpensesResume(amount, paidExpenses.size());
     }
 
     private void removeAdminFromHouse(HouseMember memberData) {

@@ -1,6 +1,7 @@
 package unileste.homefinance.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -16,9 +17,11 @@ import unileste.homefinance.DTOs.deafult.DefaultErrorResponse;
 import unileste.homefinance.DTOs.house.CreateHouseRequestBody;
 import unileste.homefinance.DTOs.house.HouseDTO;
 import unileste.homefinance.DTOs.house.LeaveHouseResponse;
+import unileste.homefinance.DTOs.house.UpdateHouseBalanceResponse;
 import unileste.homefinance.DTOs.house.resume.HouseResumeDTO;
 import unileste.homefinance.service.HouseService;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @RestController
@@ -210,5 +213,42 @@ public class HouseController {
         HouseResumeDTO houseResumeDTO = houseService.getHouseResume();
         log.info("getHouseResume() - [END]");
         return ResponseEntity.ok(houseResumeDTO);
+    }
+
+    @Operation(summary = "Atualizar saldo da residência manualmente",
+            description = "Endpoint para membros da residência atualizarem o saldo da residência ativa manualmente. O membro pode fornecer um valor a ser adicionado ou subtraído do saldo atual da residência.",
+            parameters = {
+                    @Parameter(name = "add", description = "Valor a ser adicionado ao saldo da residência. Deve ser um número decimal positivo. Exemplo: 100.50"),
+                    @Parameter(name = "subtract", description = "Valor a ser subtraído do saldo da residência. Deve ser um número decimal positivo. Exemplo: 50.25")
+            })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Saldo da residência atualizado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Requisição inválida, por exemplo, ambos os valores de adição e subtração ausentes ou inválidos",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DefaultErrorResponse.class)
+                    )),
+            @ApiResponse(responseCode = "401", description = "Não autorizado, token de autenticação ausente ou inválido",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DefaultErrorResponse.class)
+                    )),
+            @ApiResponse(responseCode = "404", description = "Residência ativa não encontrada para o usuário",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DefaultErrorResponse.class)
+                    )),
+            @ApiResponse(responseCode = "500", description = "Erro interno do servidor",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DefaultErrorResponse.class)
+                    ))
+    })
+    @PatchMapping("/balance")
+    public UpdateHouseBalanceResponse updateHouseBalance(@PathParam("valueToAdd") BigDecimal valueToAdd, @PathParam("valueToSubtract") BigDecimal valueToSubtract) {
+        log.info("updateHouseBalance() - [START]");
+        UpdateHouseBalanceResponse response = houseService.manualUpdateHouseBalance(valueToAdd, valueToSubtract);
+        log.info("updateHouseBalance() - [END]");
+        return response;
     }
 }

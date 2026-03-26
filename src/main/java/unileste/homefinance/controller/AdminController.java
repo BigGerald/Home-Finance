@@ -23,7 +23,7 @@ import unileste.homefinance.service.UserService;
 @Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/admin")
-@Tag(name = "Admin", description = "Endpoints relacionados à administração do sistema, como gerenciamento de usuários, configurações globais e monitoramento.")
+@Tag(name = "Admin", description = "Endpoints relacionados à administração do sistema, como gerenciamento de usuários, configurações globais e monitoramento. Não se refere a adiministradores das casas e sim da API/Sistema")
 public class AdminController {
 
     private final UserService userService;
@@ -49,6 +49,20 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
     }
 
+    @Operation(summary = "Obter usuário por ID", description = "Retorna os dados essenciais de um usuário específico com base no ID fornecido")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuário encontrado"),
+            @ApiResponse(responseCode = "400", description = "ID de usuário inválido",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DefaultErrorResponse.class)
+                    )),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = DefaultErrorResponse.class)
+                    ))
+    })
     @GetMapping("/user")
     public ResponseEntity<EssentialUserDTO> getUserById(@PathVariable String userId) {
         log.info("getUserById() - [START] - userId = {}", userId);

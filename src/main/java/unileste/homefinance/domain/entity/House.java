@@ -46,6 +46,9 @@ public class House {
     @OneToMany(mappedBy = "house", cascade = CascadeType.ALL)
     private List<Expense> expenses;
 
+    @OneToMany(mappedBy = "house", cascade = CascadeType.ALL)
+    private List<HouseBalanceTransaction> balanceTransactions;
+
     public void addMember(HouseMember member) {
         member.setHouse(this);
         if(this.members == null) {

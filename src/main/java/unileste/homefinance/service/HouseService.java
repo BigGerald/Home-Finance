@@ -7,21 +7,17 @@ import org.springframework.stereotype.Service;
 import unileste.homefinance.DTOs.house.CreateHouseRequestBody;
 import unileste.homefinance.DTOs.house.HouseDTO;
 import unileste.homefinance.DTOs.house.LeaveHouseResponse;
+import unileste.homefinance.DTOs.house.UpdateHouseBalanceResponse;
 import unileste.homefinance.DTOs.house.resume.*;
 import unileste.homefinance.domain.constants.ExpenseStatus;
 import unileste.homefinance.domain.constants.MemberRole;
 import unileste.homefinance.domain.constants.MemberStatus;
-import unileste.homefinance.domain.entity.Expense;
-import unileste.homefinance.domain.entity.ExpenseSplit;
-import unileste.homefinance.domain.entity.House;
-import unileste.homefinance.domain.entity.HouseMember;
+import unileste.homefinance.domain.constants.TransactionType;
+import unileste.homefinance.domain.entity.*;
 import unileste.homefinance.exceptions.HouseException;
 import unileste.homefinance.exceptions.HouseNotFoundException;
 import unileste.homefinance.mapper.HouseMemberMapper;
-import unileste.homefinance.repository.ExpenseRepository;
-import unileste.homefinance.repository.ExpenseSplitRepository;
-import unileste.homefinance.repository.HouseMemberRepository;
-import unileste.homefinance.repository.HouseRepository;
+import unileste.homefinance.repository.*;
 import unileste.homefinance.utils.JwtUtils;
 
 import java.math.BigDecimal;
@@ -42,7 +38,7 @@ public class HouseService {
     private final HouseMemberMapper houseMemberMapper;
     private final HouseMemberRepository houseMemberRepository;
     private final ExpenseRepository expenseRepository;
-    private final ExpenseSplitRepository expenseSplitRepository;
+    private final HouseBalanceTransactionRepository houseBalanceTransactionRepository;
     private final UserService userService;
 
     public HouseDTO createNewHouse(CreateHouseRequestBody request) {
@@ -191,6 +187,63 @@ public class HouseService {
         log.info("getHouseResume() - users debits calculated successfully");
         log.info("getHouseResume() - [END]");
         return houseResume;
+    }
+
+    @Transactional
+    public UpdateHouseBalanceResponse manualUpdateHouseBalance(BigDecimal valueToAdd,  BigDecimal valueToSubtract) {
+        UUID requestUserId = UUID.fromString(jwtUtils.getUserId());
+        log.info("manualUpdateHouseBalance() - [START] - userId: {} - valueToAdd: {} - valueToSubtract: {}", requestUserId, valueToAdd, valueToSubtract);
+        log.info("manualUpdateHouseBalance() - validating request");
+        TransactionType transactionType = validateUpdateHouseBalanceRequest(valueToAdd, valueToSubtract);
+        log.info("manualUpdateHouseBalance() - request validated - trying to do {} operation", transactionType);
+        log.info("manualUpdateHouseBalance() - validating if user has a active house");
+        HouseMember memberData = houseMemberRepository.findByUserIdAndStatus(requestUserId, MemberStatus.ACTIVE).
+                orElseThrow(() -> new HouseNotFoundException("User is not active in a house"));
+        House houseData = memberData.getHouse();
+        log.info("manualUpdateHouseBalance() - user has an active house - houseId: {}", houseData.getId());
+        if(transactionType.equals(TransactionType.MANUAL_REMOVE) && houseData.getBalance().compareTo(valueToSubtract) < 0) {
+            log.error("manualUpdateHouseBalance() - cannot subtract value from house balance because the value is greater than the current balance");
+            throw new HouseException("Cannot subtract value from house balance because the value is greater than the current balance");
+        }
+        HouseBalanceTransaction newTransaction = HouseBalanceTransaction.builder()
+                .amount(transactionType.equals(TransactionType.MANUAL_ADD) ? valueToAdd : valueToSubtract)
+                .type(transactionType)
+                .userId(requestUserId)
+                .house(houseData)
+                .description("Manual balance update")
+                .build();
+
+        houseBalanceTransactionRepository.save(newTransaction);
+        log.info("manualUpdateHouseBalance() - transaction saved successfully");
+        if(transactionType.equals(TransactionType.MANUAL_ADD)) {
+            houseData.setBalance(houseData.getBalance().add(valueToAdd));
+        } else {
+            houseData.setBalance(houseData.getBalance().subtract(valueToSubtract));
+        }
+        houseRepository.save(houseData);
+        log.info("manualUpdateHouseBalance() - [END] -  house balance updated successfully - new balance: {}", houseData.getBalance());
+        return new UpdateHouseBalanceResponse("House balance updated successfully", houseData.getBalance());
+    }
+
+    private TransactionType validateUpdateHouseBalanceRequest(BigDecimal valueToAdd, BigDecimal valueToSubtract) {
+        if(valueToAdd != null && valueToSubtract != null) {
+            log.error("validateUpdateHouseBalanceRequest() - User are trying to add and subtract balance at the same time");
+            throw new HouseException("You cannot add and subtract balance at the same time, please choose one of the options");
+        }
+        if(valueToAdd == null && valueToSubtract == null) {
+            log.error("validateUpdateHouseBalanceRequest() - User did not provide any value to update the balance");
+            throw new HouseException("You must provide a value to update the balance, please choose one of the options - add or subtract");
+        }
+        if(valueToAdd != null) {
+            if(valueToAdd.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("You must provide a positive value to add or subtract");
+            }
+            return TransactionType.MANUAL_ADD;
+        }
+        if(valueToSubtract.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("You must provide a positive value to subtract the balance");
+        }
+        return TransactionType.MANUAL_REMOVE;
     }
 
     private List<UserDebitsResume> getThisMonthUserDebits(UUID houseId) {

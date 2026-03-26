@@ -1,8 +1,8 @@
 package unileste.homefinance.domain.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 import unileste.homefinance.domain.constants.TransactionType;
 
 import java.math.BigDecimal;
@@ -13,6 +13,9 @@ import java.util.UUID;
 @Table(name = "house_balance_transactions")
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class HouseBalanceTransaction {
 
     @Id
@@ -33,6 +36,7 @@ public class HouseBalanceTransaction {
 
     private String description;
 
+    @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 }

@@ -13,6 +13,8 @@ import java.util.UUID;
 
 @Repository
 public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
+    Optional<Expense> findById(UUID id);
+
     List<Expense> findByHouseId(UUID houseId);
 
     Optional<Expense> findByIdAndHouseId(UUID id, UUID houseId);

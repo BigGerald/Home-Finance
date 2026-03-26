@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import unileste.homefinance.DTOs.expense.CreateExpenseRequestBody;
+import unileste.homefinance.DTOs.expense.DeleteExpenseResponse;
 import unileste.homefinance.DTOs.expense.ExpenseDTO;
 import unileste.homefinance.DTOs.expense.UpdateExpenseStatusRequest;
 import unileste.homefinance.DTOs.expenseSplit.ExpenseSplitDTO;
@@ -170,6 +171,22 @@ public class ExpenseService {
         expenseSplitRepository.save(splitEntityData);
         log.info("updateExpenseSplitStatus() - [END] - Expense split updated for expense split {} - new status: {}", splitEntityData.getId(), splitEntityData.getStatus());
         return expenseSplitMapper.toExpenseSplitDTO(splitEntityData);
+    }
+
+    public DeleteExpenseResponse deleteExpenseById(UUID id) {
+        UUID requestUserId = UUID.fromString(jwtUtils.getUserId());
+        log.info("deleteExpenseById() - [START] - user {} request delete expense with id {}", requestUserId, id);
+        Expense expenseToDelete = expenseRepository.findById(id).orElseThrow(() -> {
+            log.error("deleteExpenseById() - Expense not found with id {}", id);
+            return new EntityNotFoundException("Expense not found");
+        });
+        log.info("deleteExpenseById() - Expense found, validate if the user belongs to the expense house");
+        House houseData = expenseToDelete.getHouse();
+        validateIfUsersBelongToHouse(List.of(requestUserId.toString()), houseData);
+        log.info("deleteExpenseById() - User belongs to the house, deleting expense");
+        expenseRepository.delete(expenseToDelete);
+        log.info("deleteExpenseById() - [END] - Expense with id {} found", id);
+        return new DeleteExpenseResponse("Expense: " + id + " deleted successfully");
     }
 
     private void validateIfUsersBelongToHouse(List<String> usersIds, House house) {

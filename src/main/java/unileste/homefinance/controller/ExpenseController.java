@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import unileste.homefinance.DTOs.deafult.DefaultErrorResponse;
 import unileste.homefinance.DTOs.expense.CreateExpenseRequestBody;
+import unileste.homefinance.DTOs.expense.DeleteExpenseResponse;
 import unileste.homefinance.DTOs.expense.ExpenseDTO;
 import unileste.homefinance.DTOs.expense.UpdateExpenseStatusRequest;
 import unileste.homefinance.DTOs.expenseSplit.ExpenseSplitDTO;
@@ -58,12 +59,12 @@ public class ExpenseController {
 
     @Operation(summary = "Obter despesas da casa",
             description = "Retorna uma lista de despesas da casa do usuário autenticado, com opções de filtro por status, mês, ano e responsável.",
-    parameters = {
-            @Parameter(name = "status", description = "Status da despesa para filtrar (PENDING, PAID)"),
-            @Parameter(name = "month", description = "Mês para filtrar despesas (1-12)"),
-            @Parameter(name = "year", description = "Ano para filtrar despesas ( 2024)"),
-            @Parameter(name = "responsibleId", description = "ID do responsável para filtrar despesas")
-    })
+            parameters = {
+                    @Parameter(name = "status", description = "Status da despesa para filtrar (PENDING, PAID)"),
+                    @Parameter(name = "month", description = "Mês para filtrar despesas (1-12)"),
+                    @Parameter(name = "year", description = "Ano para filtrar despesas ( 2024)"),
+                    @Parameter(name = "responsibleId", description = "ID do responsável para filtrar despesas")
+            })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Despesas obtidas com sucesso"),
             @ApiResponse(responseCode = "400", description = "Requisição inválida, como combinação inválida de filtros",
@@ -104,6 +105,27 @@ public class ExpenseController {
         log.info("getExpenseById() - [START]");
         ExpenseDTO response = expenseService.getExpenseById(id);
         log.info("getExpenseById() - [END]");
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Deletar despesa por ID",
+            description = "Deleta uma despesa específica da casa do usuário autenticado, identificada pelo ID.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Despesa deletada com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Requisição inválida, como ID em formato inválido",
+                    content = @Content(schema = @Schema(implementation = DefaultErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Não autorizado, usuário não autenticado",
+                    content = @Content(schema = @Schema(implementation = DefaultErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Despesa não encontrada",
+                    content = @Content(schema = @Schema(implementation = DefaultErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Erro interno do servidor",
+                    content = @Content(schema = @Schema(implementation = DefaultErrorResponse.class)))
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<DeleteExpenseResponse> deleteExpenseById(@PathVariable(name = "id") UUID id) {
+        log.info("deleteExpenseById() - [START]");
+        DeleteExpenseResponse response = expenseService.deleteExpenseById(id);
+        log.info("deleteExpenseById() - [END]");
         return ResponseEntity.ok(response);
     }
 

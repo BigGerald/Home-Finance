@@ -45,18 +45,18 @@ public class ExpenseService {
     public List<ExpenseDTO> getHouseExpenses(ExpenseStatus status, Integer month, Integer year, String responsibleUserId) {
         UUID requestUserId = UUID.fromString(jwtUtils.getUserId());
         List<Expense> expenses;
-        log.info("getAllHouseExpenses() - [START] - for user {}", requestUserId);
-        log.info("getAllHouseExpenses() - Find User HouseMemberData");
+        log.info("getHouseExpenses() - [START] - for user {}", requestUserId);
+        log.info("getHouseExpenses() - Find User HouseMemberData");
         HouseMember requestHouseMemberData = houseMemberRepository.findByUserIdAndStatus(requestUserId, MemberStatus.ACTIVE)
                 .orElseThrow(() -> {
-                    log.error("getAllHouseExpenses() - HouseMember not found");
+                    log.error("getHouseExpenses() - HouseMember not found");
                     return new ExpenseException("User is not an active member of any house");
                 });
         if (status == null && month == null && year == null && (responsibleUserId == null || responsibleUserId.isEmpty())) {
-            log.info("getAllHouseExpenses() - No filters provided, returning all house expenses");
+            log.info("getHouseExpenses() - No filters provided, returning all house expenses");
             expenses = expenseRepository.findByHouseId(requestHouseMemberData.getHouse().getId());
         } else {
-            log.info("getAllHouseExpenses() - Filters provided, applying filters to query");
+            log.info("getHouseExpenses() - Filters provided, applying filters to query");
             expenses = expenseRepository.findWithFilters(
                     requestHouseMemberData.getHouse().getId(),
                     status,
@@ -66,10 +66,10 @@ public class ExpenseService {
             );
         }
         if (expenses.isEmpty()) {
-            log.info("getAllHouseExpenses() - No expenses found");
+            log.info("getHouseExpenses() - No expenses found");
             return new ArrayList<>();
         }
-        log.info("getAllHouseExpenses() - Returning expenses, {} expenses found", expenses.size());
+        log.info("getHouseExpenses() - Returning expenses, {} expenses found", expenses.size());
         return expenses.stream().map(expenseMapper::expenseToExpenseDTO).toList();
     }
 

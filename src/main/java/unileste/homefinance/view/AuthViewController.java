@@ -8,6 +8,6 @@ public class AuthViewController {
 
     @GetMapping("/public/email-confirmed")
     public String emailConfirmedPage() {
-        return "email-confirmed"; // nome do arquivo SEM .html
+        return "email-confirmed";
     }
 }

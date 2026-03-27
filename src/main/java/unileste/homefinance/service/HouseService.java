@@ -300,7 +300,7 @@ public class HouseService {
                         .amount(expense.getAmount())
                         .dueDate(expense.getDueDate())
                         .expenseStatus(expense.getStatus())
-                        .responsibleName(userService.getUserById(expense.getResponsibleId().toString()).getDisplayName())
+                        .responsibleName(expense.getResponsibleId() != null ? userService.getUserById(expense.getResponsibleId().toString()).getDisplayName() : null)
                         .build())
                 .toList();
     }

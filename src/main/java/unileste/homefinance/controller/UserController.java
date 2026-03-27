@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import unileste.homefinance.DTOs.deafult.DefaultErrorResponse;
-import unileste.homefinance.DTOs.user.EssentialUserDTO;
 import unileste.homefinance.DTOs.user.EssentialUserWithBiometricInfoDTO;
 import unileste.homefinance.DTOs.user.UpdateUserBiometricResponse;
 import unileste.homefinance.service.UserService;

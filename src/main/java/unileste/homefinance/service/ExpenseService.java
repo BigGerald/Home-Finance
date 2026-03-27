@@ -70,7 +70,10 @@ public class ExpenseService {
             return new ArrayList<>();
         }
         log.info("getHouseExpenses() - Returning expenses, {} expenses found", expenses.size());
-        return expenses.stream().map(expenseMapper::expenseToExpenseDTO).toList();
+        return expenses.stream()
+                .sorted(java.util.Comparator.comparing(Expense::getDueDate))
+                .map(expenseMapper::expenseToExpenseDTO)
+                .toList();
     }
 
     @Transactional

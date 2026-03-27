@@ -15,6 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 public class ExpenseDTO {
     private String id;
+    private String title;
     private String description;
     private BigDecimal amount;
     private ExpenseStatus status;

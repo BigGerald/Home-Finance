@@ -16,6 +16,7 @@ public class ExpenseMapper {
     public ExpenseDTO  expenseToExpenseDTO(Expense expense) {
         ExpenseDTO expenseDTO = new ExpenseDTO();
         expenseDTO.setId(expense.getId().toString());
+        expenseDTO.setTitle(expense.getTitle());
         expenseDTO.setDescription(expense.getDescription());
         expenseDTO.setAmount(expense.getAmount());
         expenseDTO.setStatus(expense.getStatus());

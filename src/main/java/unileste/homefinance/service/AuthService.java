@@ -1,48 +1,73 @@
 package unileste.homefinance.service;
 
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import unileste.homefinance.DTOs.auth.Login.LoginDTO;
 import unileste.homefinance.DTOs.auth.Login.RegisterUserDTO;
 import unileste.homefinance.DTOs.auth.Supabase.User.SupabaseAuthResponse;
+import unileste.homefinance.DTOs.auth.Supabase.User.SupabaseOptions;
 import unileste.homefinance.DTOs.auth.Supabase.User.SupabaseRegisterUserDTO;
 import unileste.homefinance.DTOs.auth.Supabase.User.SupabaseUser;
 import unileste.homefinance.client.SupabaseAuthClient;
 import unileste.homefinance.domain.constants.UserTypes;
+import unileste.homefinance.exceptions.SupabaseException;
 import unileste.homefinance.utils.JwtUtils;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AuthService {
-    private final SupabaseAuthClient  supabaseAuthClient;
-    private final JwtUtils jwtUtils;
+    private final SupabaseAuthClient supabaseAuthClient;
+    @Value("${confirmation-email-url}")
+    private String confirmationEmailUrl;
 
     public SupabaseUser adminSignUp(RegisterUserDTO registerUserDTO) {
-        log.info("adminSignUp() - Received admin sign-up request for email: {}", registerUserDTO.getEmail());
-        log.info("adminSignup() - validating request");
-        registerUserDTO.validateRegisterUserRequest();
-        log.info("adminSignup() - valid request");
-        SupabaseUser newUSer = supabaseAuthClient.signUp( new SupabaseRegisterUserDTO(registerUserDTO, UserTypes.ADMIN, false) ).getBody();
-        log.info("adminSignUp() - User created with ID: {}", newUSer.getId());
-        return newUSer;
+        try {
+            log.info("adminSignUp() - Received admin sign-up request for email: {}", registerUserDTO.getEmail());
+            log.info("adminSignup() - validating request");
+            registerUserDTO.validateRegisterUserRequest();
+            log.info("adminSignup() - valid request");
+            SupabaseOptions supabaseOptions = SupabaseOptions.builder()
+                    .emailRedirectTo(confirmationEmailUrl).build();
+            SupabaseUser newUSer = supabaseAuthClient.signUp(new SupabaseRegisterUserDTO(registerUserDTO, UserTypes.ADMIN, false, supabaseOptions)).getBody();
+            log.info("adminSignUp() - User created with ID: {}", newUSer.getId());
+            return newUSer;
+        } catch (FeignException ex) {
+            log.error("adminSignUp() - FeignException - ", ex);
+            throw new SupabaseException(ex);
+        }
+
     }
 
     public SupabaseUser commonUserSignUp(RegisterUserDTO registerUserDTO) {
-        log.info("commonUserSignUp() - Received user sign-up request for email: {}", registerUserDTO.getEmail());
-        log.info("commonUserSignUp() - validating request");
-        registerUserDTO.validateRegisterUserRequest();
-        log.info("commonUserSignUp() - valid request");
-        SupabaseUser newUser = supabaseAuthClient.signUp( new SupabaseRegisterUserDTO( registerUserDTO, UserTypes.USER, false)).getBody();
-        log.info("commonUserSignUp() - User created with ID: {}", newUser.getId());
-        return newUser;
+        try {
+            log.info("commonUserSignUp() - Received user sign-up request for email: {}", registerUserDTO.getEmail());
+            log.info("commonUserSignUp() - validating request");
+            registerUserDTO.validateRegisterUserRequest();
+            log.info("commonUserSignUp() - valid request");
+            SupabaseOptions supabaseOptions = SupabaseOptions.builder()
+                    .emailRedirectTo(confirmationEmailUrl).build();
+            SupabaseUser newUser = supabaseAuthClient.signUp(new SupabaseRegisterUserDTO(registerUserDTO, UserTypes.USER, false, supabaseOptions)).getBody();
+            log.info("commonUserSignUp() - User created with ID: {}", newUser.getId());
+            return newUser;
+        } catch (FeignException ex) {
+            log.error("commonUserSignUp() - FeignException - ", ex);
+            throw new SupabaseException(ex);
+        }
     }
 
     public SupabaseAuthResponse signIn(String email, String password) {
-        log.info("signIn() - Attempting to sign in user with email: {}", email);
-        SupabaseAuthResponse response =  supabaseAuthClient.signIn(new LoginDTO(email, password)).getBody();
-        log.info("signIn() - User signed in successfully, received access token");
-        return response;
+        try {
+            log.info("signIn() - Attempting to sign in user with email: {}", email);
+            SupabaseAuthResponse response = supabaseAuthClient.signIn(new LoginDTO(email, password)).getBody();
+            log.info("signIn() - User signed in successfully, received access token");
+            return response;
+        } catch (FeignException ex) {
+            log.error("signIn() - FeignException - ", ex);
+            throw new SupabaseException(ex);
+        }
     }
 }

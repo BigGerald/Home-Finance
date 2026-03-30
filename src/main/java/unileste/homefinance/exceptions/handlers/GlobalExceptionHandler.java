@@ -12,10 +12,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import unileste.homefinance.DTOs.deafult.DefaultErrorResponse;
-import unileste.homefinance.exceptions.AuthException;
-import unileste.homefinance.exceptions.ExpenseException;
-import unileste.homefinance.exceptions.HouseException;
-import unileste.homefinance.exceptions.HouseNotFoundException;
+import unileste.homefinance.exceptions.*;
 
 
 @ControllerAdvice
@@ -98,6 +95,12 @@ public class GlobalExceptionHandler {
         log.warn("handleHttpMessageNotReadableException - {}", ex.getMessage(), ex);
         String message = extractProblemFromHttpMessageNotReadableException(ex);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(DefaultErrorResponse.builder().message(message).build());
+    }
+
+    @ExceptionHandler(SupabaseException.class)
+    public ResponseEntity<DefaultErrorResponse> handleSupabaseException(SupabaseException ex) {
+        log.warn("handleSupabaseException - {}", ex.getMessage(), ex);
+        return ResponseEntity.status(ex.getCode()).body(DefaultErrorResponse.builder().message(ex.getMessage()).build());
     }
 
     private String extractProblemFromHttpMessageNotReadableException(HttpMessageNotReadableException ex) {

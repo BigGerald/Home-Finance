@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import unileste.homefinance.DTOs.auth.Login.LoginDTO;
 import unileste.homefinance.DTOs.auth.Login.RegisterUserDTO;
 import unileste.homefinance.DTOs.auth.Supabase.User.SupabaseAuthResponse;
-import unileste.homefinance.DTOs.auth.Supabase.User.SupabaseOptions;
 import unileste.homefinance.DTOs.auth.Supabase.User.SupabaseRegisterUserDTO;
 import unileste.homefinance.DTOs.auth.Supabase.User.SupabaseUser;
 import unileste.homefinance.client.SupabaseAuthClient;
@@ -21,8 +20,6 @@ import unileste.homefinance.utils.JwtUtils;
 @Slf4j
 public class AuthService {
     private final SupabaseAuthClient supabaseAuthClient;
-    @Value("${confirmation-email-url}")
-    private String confirmationEmailUrl;
 
     public SupabaseUser adminSignUp(RegisterUserDTO registerUserDTO) {
         try {
@@ -30,9 +27,7 @@ public class AuthService {
             log.info("adminSignup() - validating request");
             registerUserDTO.validateRegisterUserRequest();
             log.info("adminSignup() - valid request");
-            SupabaseOptions supabaseOptions = SupabaseOptions.builder()
-                    .emailRedirectTo(confirmationEmailUrl).build();
-            SupabaseUser newUSer = supabaseAuthClient.signUp(new SupabaseRegisterUserDTO(registerUserDTO, UserTypes.ADMIN, false, supabaseOptions)).getBody();
+            SupabaseUser newUSer = supabaseAuthClient.signUp(new SupabaseRegisterUserDTO(registerUserDTO, UserTypes.ADMIN, false)).getBody();
             log.info("adminSignUp() - User created with ID: {}", newUSer.getId());
             return newUSer;
         } catch (FeignException ex) {
@@ -48,9 +43,7 @@ public class AuthService {
             log.info("commonUserSignUp() - validating request");
             registerUserDTO.validateRegisterUserRequest();
             log.info("commonUserSignUp() - valid request");
-            SupabaseOptions supabaseOptions = SupabaseOptions.builder()
-                    .emailRedirectTo(confirmationEmailUrl).build();
-            SupabaseUser newUser = supabaseAuthClient.signUp(new SupabaseRegisterUserDTO(registerUserDTO, UserTypes.USER, false, supabaseOptions)).getBody();
+            SupabaseUser newUser = supabaseAuthClient.signUp(new SupabaseRegisterUserDTO(registerUserDTO, UserTypes.USER, false)).getBody();
             log.info("commonUserSignUp() - User created with ID: {}", newUser.getId());
             return newUser;
         } catch (FeignException ex) {

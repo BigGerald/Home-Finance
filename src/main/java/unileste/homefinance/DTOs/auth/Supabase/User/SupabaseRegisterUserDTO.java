@@ -1,6 +1,5 @@
 package unileste.homefinance.DTOs.auth.Supabase.User;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,15 +11,13 @@ import unileste.homefinance.domain.constants.UserTypes;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 @Builder
 public class SupabaseRegisterUserDTO {
     private String email;
     private String password;
     private SupabaseRegisterUserData data;
-    private SupabaseOptions options;
 
-    public SupabaseRegisterUserDTO(RegisterUserDTO register, UserTypes type, boolean isBiometricEnabled, SupabaseOptions options) {
+    public SupabaseRegisterUserDTO(RegisterUserDTO register, UserTypes type, boolean isBiometricEnabled) {
         this.email = register.getEmail();
         this.password = register.getPassword();
         this.data = SupabaseRegisterUserData.builder()
@@ -30,6 +27,5 @@ public class SupabaseRegisterUserDTO {
                 .role(type.getValue())
                 .biometricEnabled(isBiometricEnabled)
                 .build();
-        this.options = options;
     }
 }

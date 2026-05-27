@@ -253,7 +253,7 @@ public class HouseService {
 
         List<Expense> monthExpenses = expenseRepository.findPendingExpensesByHouseIdAndStatusAndDueDateBetween(
                 houseId,
-                null,
+                ExpenseStatus.PENDING,
                 LocalDate.now().withDayOfMonth(1),
                 LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth())
         );
